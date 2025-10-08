@@ -12,9 +12,9 @@ import { EmptyState } from "../app/empty-state";
 import { formatDistanceToNow } from 'date-fns';
 
 export function ClientsScreen() {
-  const { clients, navigateTo, setAddClientFormOpen } = useAppContext();
+  const { clients, navigateTo, setAddClientFormOpen, clientVisibilities, toggleClientVisibility } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
-  const [visibilities, setVisibilities] = useState<Record<string, boolean>>({});
+  
   // State to force re-renders for the duration updates
   const [, setNow] = useState(new Date());
 
@@ -24,13 +24,6 @@ export function ClientsScreen() {
     }, 60000); // Update every minute
     return () => clearInterval(interval);
   }, []);
-
-  const toggleVisibility = (clientId: string) => {
-    setVisibilities(prev => ({
-      ...prev,
-      [clientId]: !prev[clientId]
-    }));
-  };
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -62,7 +55,7 @@ export function ClientsScreen() {
           <div className="space-y-3 pr-1">
             {filteredClients.map(client => {
               const tabTotal = client.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-              const isVisible = visibilities[client.id] ?? true;
+              const isVisible = clientVisibilities[client.id] ?? true;
 
               return (
                 <Card 
@@ -83,7 +76,7 @@ export function ClientsScreen() {
                               className="text-accent font-bold cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleVisibility(client.id);
+                                toggleClientVisibility(client.id);
                               }}
                             >
                               {formatValue(tabTotal, isVisible, formatCurrency)}
