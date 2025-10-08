@@ -1,4 +1,4 @@
-export type PaymentMethod = 'Cash' | 'Card';
+export type PaymentMethod = 'Cash' | 'Credit Card' | 'Debit Card';
 
 export interface Item {
   id: string;

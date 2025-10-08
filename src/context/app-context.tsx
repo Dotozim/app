@@ -41,7 +41,7 @@ const initialClients: Client[] = [
       { id: 'a1', name: 'Craft IPA', price: 7.5, quantity: 2 },
       { id: 'b2', name: 'Pretzel Bites', price: 5.0, quantity: 1 },
     ],
-    purchaseHistory: [{ id: 'c3', name: 'Stout', price: 8.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Card' }],
+    purchaseHistory: [{ id: 'c3', name: 'Stout', price: 8.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Credit Card' }],
     tabOpenedAt: new Date().toISOString(),
   },
   {
@@ -50,7 +50,7 @@ const initialClients: Client[] = [
     currentTab: [{ id: 'd4', name: 'Lager', price: 6.0, quantity: 1 }],
     purchaseHistory: [
       { id: 'e5', name: 'Lager', price: 6.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Cash' },
-      { id: 'f6', name: 'Chicken Wings', price: 12.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Card' },
+      { id: 'f6', name: 'Chicken Wings', price: 12.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Credit Card' },
     ],
     tabOpenedAt: new Date().toISOString(),
   },

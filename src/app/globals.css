@@ -27,25 +27,25 @@
   }
 
   .dark {
-    --background: 240 9% 12%; /* Base */
-    --foreground: 240 9% 81%; /* Text */
-    --card: 240 9% 15%; /* Mantle */
-    --card-foreground: 240 9% 81%; /* Text */
-    --popover: 240 9% 15%; /* Mantle */
-    --popover-foreground: 240 9% 81%; /* Text */
-    --primary: 265 89% 78%; /* Mauve */
-    --primary-foreground: 240 9% 12%; /* Base */
-    --secondary: 240 7% 20%; /* Surface0 */
-    --secondary-foreground: 240 9% 81%; /* Text */
-    --muted: 240, 7%, 20%; /* Surface0 */
-    --muted-foreground: 240 5% 65%; /* Subtext0 */
-    --accent: 330 67% 71%; /* Red */
-    --accent-foreground: 240 9% 12%; /* Base */
-    --destructive: 330 67% 71%; /* Red */
-    --destructive-foreground: 240 9% 12%; /* Base */
-    --border: 240 5% 26%; /* Surface2 */
-    --input: 240 5% 26%; /* Surface2 */
-    --ring: 265 89% 78%; /* Mauve */
+    --background: 239 14% 11%; /* Base */
+    --foreground: 224 40% 85%; /* Text */
+    --card: 239 13% 15%; /* Mantle */
+    --card-foreground: 224 40% 85%; /* Text */
+    --popover: 239 13% 15%; /* Mantle */
+    --popover-foreground: 224 40% 85%; /* Text */
+    --primary: 219 79% 85%; /* Mauve */
+    --primary-foreground: 239 14% 11%; /* Base */
+    --secondary: 235 15% 24%; /* Surface0 */
+    --secondary-foreground: 224 40% 85%; /* Text */
+    --muted: 235, 15%, 24%; /* Surface0 */
+    --muted-foreground: 228 15% 58%; /* Subtext0 */
+    --accent: 358 87% 73%; /* Red */
+    --accent-foreground: 239 14% 11%; /* Base */
+    --destructive: 358 87% 73%; /* Red */
+    --destructive-foreground: 239 14% 11%; /* Base */
+    --border: 235 15% 30%; /* Surface2 */
+    --input: 235 15% 30%; /* Surface2 */
+    --ring: 219 79% 85%; /* Mauve */
     --radius: 0.75rem;
   }
 }

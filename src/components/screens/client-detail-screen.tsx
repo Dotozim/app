@@ -5,12 +5,12 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, DollarSign, Trash2 } from 'lucide-react';
+import { Plus, DollarSign, Minus } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { format } from 'date-fns';
 
 export function ClientDetailScreen() {
-  const { activeClient, navigateTo, handleRemoveItem } = useAppContext();
+  const { activeClient, navigateTo, handleAddItem, handleRemoveItem, products } = useAppContext();
 
   if (!activeClient) {
     return <div className="text-center py-10">No client selected.</div>;
@@ -58,15 +58,14 @@ export function ClientDetailScreen() {
       {activeClient.currentTab.length > 0 ? (
         <ScrollArea className="flex-grow">
           <div className="space-y-2 pr-1">
-            {activeClient.currentTab.map((item) => (
+            {activeClient.currentTab.map((item) => {
+              const product = products.find(p => p.name === item.name);
+              return (
               <div
                 key={item.id}
                 className="flex justify-between items-center p-3 rounded-lg bg-secondary"
               >
                 <div className="flex items-center gap-3 flex-grow">
-                    <span className="font-semibold bg-primary/10 text-primary rounded-full h-7 w-7 flex items-center justify-center text-xs">
-                        {item.quantity}x
-                    </span>
                     <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground">
@@ -74,22 +73,27 @@ export function ClientDetailScreen() {
                         </p>
                     </div>
                 </div>
-                <div className="text-right">
-                    <p className="font-bold text-md">
-                        {formatCurrency(item.price * item.quantity)}
-                    </p>
+                 <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => handleRemoveItem(activeClient.id, item.id)}
+                    >
+                        <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="font-bold text-md w-4 text-center">{item.quantity}</span>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => product && handleAddItem(activeClient.id, product)}
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveItem(activeClient.id, item.id)}
-                  className="text-muted-foreground hover:text-destructive ml-2"
-                >
-                  <Trash2 className="h-5 w-5" />
-                  <span className="sr-only">Remove item</span>
-                </Button>
               </div>
-            ))}
+            )})}
           </div>
         </ScrollArea>
       ) : (

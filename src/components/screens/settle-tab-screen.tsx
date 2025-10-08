@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DollarSign, CreditCard, Banknote } from "lucide-react";
+import { DollarSign, CreditCard, Banknote, Landmark } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,14 +82,18 @@ export function SettleTabScreen() {
                   How is {activeClient.name} paying for the total of {formatCurrency(total)}?
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="grid grid-cols-3 gap-4 py-4">
                   <Button variant={paymentMethod === 'Cash' ? 'default' : 'secondary'} className="h-20 flex-col gap-2" onClick={() => setPaymentMethod('Cash')}>
                       <Banknote className="h-7 w-7"/>
                       Cash
                   </Button>
-                  <Button variant={paymentMethod === 'Card' ? 'default' : 'secondary'} className="h-20 flex-col gap-2" onClick={() => setPaymentMethod('Card')}>
+                  <Button variant={paymentMethod === 'Credit Card' ? 'default' : 'secondary'} className="h-20 flex-col gap-2" onClick={() => setPaymentMethod('Credit Card')}>
                       <CreditCard className="h-7 w-7"/>
-                      Card
+                      Credit
+                  </Button>
+                   <Button variant={paymentMethod === 'Debit Card' ? 'default' : 'secondary'} className="h-20 flex-col gap-2" onClick={() => setPaymentMethod('Debit Card')}>
+                      <Landmark className="h-7 w-7"/>
+                      Debit
                   </Button>
               </div>
               <AlertDialogFooter>

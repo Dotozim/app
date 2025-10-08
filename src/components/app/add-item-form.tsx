@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
 import { formatCurrency } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
@@ -91,15 +91,14 @@ export function AddItemForm() {
                 {activeClient && activeClient.currentTab.length > 0 ? (
                 <ScrollArea className="flex-grow pr-1">
                     <div className="space-y-2">
-                    {activeClient.currentTab.map((item) => (
+                    {activeClient.currentTab.map((item) => {
+                       const product = products.find(p => p.name === item.name);
+                       return (
                         <div
                         key={item.id}
                         className="flex justify-between items-center p-3 rounded-lg bg-secondary"
                         >
                           <div className="flex items-center gap-3 flex-grow">
-                            <span className="font-semibold bg-primary/10 text-primary rounded-full h-7 w-7 flex items-center justify-center text-xs">
-                                {item.quantity}x
-                            </span>
                             <div>
                               <p className="font-medium">{item.name}</p>
                               <p className="text-sm text-muted-foreground">
@@ -107,22 +106,27 @@ export function AddItemForm() {
                               </p>
                             </div>
                           </div>
-                          <div className='text-right'>
-                            <p className="font-bold text-md">
-                                {formatCurrency(item.price * item.quantity)}
-                            </p>
-                          </div>
-                          <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => activeClient && handleRemoveItem(activeClient.id, item.id)}
-                              className="text-muted-foreground hover:text-destructive h-9 w-9 ml-2"
-                          >
-                              <Trash2 className="h-5 w-5" />
-                              <span className="sr-only">Remove item</span>
-                          </Button>
+                           <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => activeClient && handleRemoveItem(activeClient.id, item.id)}
+                                >
+                                    <Minus className="h-4 w-4" />
+                                </Button>
+                                <span className="font-bold text-md w-4 text-center">{item.quantity}</span>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => activeClient && product && handleAddItem(activeClient.id, product)}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                           </div>
                         </div>
-                    ))}
+                    )})}
                     </div>
                 </ScrollArea>
             ) : (
