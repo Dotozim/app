@@ -22,12 +22,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
 import { Plus, Trash2, Edit, Package, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
 import { formatCurrency } from '@/lib/utils';
 import { Card } from '../ui/card';
 import { Product } from '@/lib/types';
 import Image from 'next/image';
+import { AutocompleteInput } from '../ui/autocomplete-input';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -56,6 +57,11 @@ export function ProductsScreen() {
       imageUrl: '',
     },
   });
+
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set(products.map(p => p.category));
+    return Array.from(categories);
+  }, [products]);
 
   useEffect(() => {
     if (editingProduct) {
@@ -163,7 +169,13 @@ export function ProductsScreen() {
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Beer" {...field} />
+                       <AutocompleteInput
+                          suggestions={uniqueCategories}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onSuggestionSelect={(suggestion) => form.setValue('category', suggestion)}
+                          placeholder="e.g., Beer"
+                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -191,7 +203,7 @@ export function ProductsScreen() {
                         <Image 
                           src={imagePreview} 
                           alt="Preview" 
-                          layout="fill"
+                          fill
                           objectFit="cover"
                         />
                         <Button

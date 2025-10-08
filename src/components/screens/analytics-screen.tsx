@@ -10,7 +10,7 @@ import { Purchase } from "@/lib/types";
 import { Button } from "../ui/button";
 import { Trash2, Search } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Input } from "../ui/input";
+import { AutocompleteInput } from "../ui/autocomplete-input";
 
 
 const formatDuration = (milliseconds: number) => {
@@ -84,6 +84,8 @@ export function AnalyticsScreen() {
       
     return { totalRevenue, clientAnalytics, allClients };
   }, [clients, searchTerm]);
+  
+  const clientNameSuggestions = useMemo(() => allClients.map(c => c.name), [allClients]);
 
 
   return (
@@ -107,20 +109,14 @@ export function AnalyticsScreen() {
         </CardHeader>
         <CardContent>
           <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input 
-                type="text" 
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+              <AutocompleteInput 
+                suggestions={clientNameSuggestions}
+                value={searchTerm}
+                onChange={setSearchTerm}
                 placeholder="Search clients..." 
                 className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                list="client-names"
               />
-              <datalist id="client-names">
-                {allClients.map(client => (
-                  <option key={client.id} value={client.name} />
-                ))}
-              </datalist>
           </div>
           {clientAnalytics.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
