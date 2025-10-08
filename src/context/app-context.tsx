@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
-import type { Client, Item, Product, Purchase, PaymentMethod, TabSession } from '@/lib/types';
+import type { Client, Item, Product, Purchase, PaymentMethod, TabSession, SplitPayment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export type Screen = 'home' | 'clients' | 'client-detail' | 'add-items' | 'settle-tab' | 'analytics' | 'products';
@@ -18,7 +18,7 @@ type AppContextType = {
   // Actions
   handleAddItem: (clientId: string, item: Omit<Item, 'id' | 'quantity'>) => void;
   handleRemoveItem: (clientId: string, itemId: string) => void;
-  handleSettleTab: (clientId: string, paymentMethod: PaymentMethod) => void;
+  handleSettleTab: (clientId: string, payments: SplitPayment[]) => void;
   handleAddClient: (name: string) => void;
   handleAddProduct: (product: Omit<Product, 'id'>) => void;
   handleUpdateProduct: (product: Product) => void;
@@ -51,13 +51,16 @@ const initialClients: Client[] = [
       { id: 'a1', name: 'Craft IPA', category: 'Beer', price: 7.5, quantity: 2, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
       { id: 'b2', name: 'Pretzel Bites', category: 'Snack', price: 5.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
     ],
-    purchaseHistory: [{ id: 'c3', name: 'Stout', category: 'Beer', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p3/400/400' }],
+    purchaseHistory: [],
     tabOpenedAt: new Date().toISOString(),
     tabHistory: [
         {
           openedAt: new Date(new Date().setDate(new Date().getDate() - 1) - 3 * 60 * 60 * 1000).toISOString(),
           closedAt: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
           duration: 3 * 60 * 60 * 1000,
+          items: [
+            { id: 'c3', name: 'Stout', category: 'Beer', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', amountPaid: 8.0, imageUrl: 'https://picsum.photos/seed/p3/400/400' }
+          ]
         }
     ]
   },
@@ -65,16 +68,17 @@ const initialClients: Client[] = [
     id: '2',
     name: 'Marcus Holloway',
     currentTab: [{ id: 'd4', name: 'Lager', category: 'Beer', price: 6.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p4/400/400' }],
-    purchaseHistory: [
-      { id: 'e5', name: 'Lager', category: 'Beer', price: 6.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Cash', imageUrl: 'https://picsum.photos/seed/p4/400/400' },
-      { id: 'f6', name: 'Chicken Wings', category: 'Food', price: 12.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p5/400/400' },
-    ],
+    purchaseHistory: [],
     tabOpenedAt: new Date().toISOString(),
     tabHistory: [
       {
         openedAt: new Date(new Date().setDate(new Date().getDate() - 2) - 2 * 60 * 60 * 1000).toISOString(),
         closedAt: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
         duration: 2 * 60 * 60 * 1000,
+        items: [
+           { id: 'e5', name: 'Lager', category: 'Beer', price: 6.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Cash', amountPaid: 6.0, imageUrl: 'https://picsum.photos/seed/p4/400/400' },
+           { id: 'f6', name: 'Chicken Wings', category: 'Food', price: 12.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Credit Card', amountPaid: 12.0, imageUrl: 'https://picsum.photos/seed/p5/400/400' },
+        ]
       }
     ],
   },
@@ -151,7 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const handleSettleTab = (clientId: string, paymentMethod: PaymentMethod) => {
+  const handleSettleTab = (clientId: string, payments: SplitPayment[]) => {
     setClients((prev) =>
       prev.map((c) => {
         if (c.id === clientId) {
@@ -159,17 +163,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
             console.error("Cannot settle tab without an opening time.");
             return c;
           }
+          
+          const now = new Date().toISOString();
+          let paymentIndex = 0;
+          let currentPaymentAmountLeft = payments[paymentIndex].amount;
 
-          const settledItems: Purchase[] = c.currentTab.map(item => ({
-            ...item,
-            purchaseDate: new Date().toISOString(),
-            paymentMethod: paymentMethod,
-          }));
+          const settledItems: Purchase[] = c.currentTab.flatMap(item => {
+            const itemTotal = item.price * item.quantity;
+            let itemAmountRemaining = itemTotal;
+            const purchases: Purchase[] = [];
+
+            while(itemAmountRemaining > 0) {
+              const amountToPay = Math.min(itemAmountRemaining, currentPaymentAmountLeft);
+              
+              purchases.push({
+                ...item,
+                purchaseDate: now,
+                paymentMethod: payments[paymentIndex].method,
+                amountPaid: amountToPay,
+              });
+
+              itemAmountRemaining -= amountToPay;
+              currentPaymentAmountLeft -= amountToPay;
+
+              if (currentPaymentAmountLeft <= 0 && paymentIndex < payments.length - 1) {
+                paymentIndex++;
+                currentPaymentAmountLeft = payments[paymentIndex].amount;
+              }
+            }
+            return purchases;
+          });
 
           const newTabSession: TabSession = {
             openedAt: c.tabOpenedAt,
-            closedAt: new Date().toISOString(),
+            closedAt: now,
             duration: new Date().getTime() - new Date(c.tabOpenedAt).getTime(),
+            items: settledItems,
           };
           
           return {
@@ -201,8 +230,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...client,
       currentTab: client.currentTab.map(item => {
         const product = products.find(p => p.id === updatedProduct.id);
-        if (item.name === product?.name) {
-          return { ...item, price: updatedProduct.price, category: updatedProduct.category, imageUrl: updatedProduct.imageUrl };
+        if (product && item.name === product.name) {
+          return { ...item, name: updatedProduct.name, price: updatedProduct.price, category: updatedProduct.category, imageUrl: updatedProduct.imageUrl };
         }
         return item;
       })

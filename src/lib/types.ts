@@ -12,19 +12,21 @@ export interface Item {
 export interface Purchase extends Item {
   purchaseDate: string;
   paymentMethod: PaymentMethod;
+  amountPaid: number; // For split payments
 }
 
 export interface TabSession {
   openedAt: string;
   closedAt: string;
   duration: number; // in milliseconds
+  items: Purchase[]; // Store items with payment info
 }
 
 export interface Client {
   id: string;
   name: string;
   currentTab: Item[];
-  purchaseHistory: Purchase[];
+  purchaseHistory: Purchase[]; // Kept for simplicity, but new data goes into TabSession
   tabOpenedAt?: string;
   tabHistory: TabSession[];
 }
@@ -36,3 +38,8 @@ export interface Product {
   price: number;
   imageUrl?: string;
 }
+
+export type SplitPayment = {
+  method: PaymentMethod;
+  amount: number;
+};

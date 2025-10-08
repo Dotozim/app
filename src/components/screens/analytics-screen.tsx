@@ -1,4 +1,3 @@
-
 'use client';
 import { useAppContext } from "@/context/app-context";
 import { useMemo } from "react";
@@ -7,6 +6,7 @@ import { formatCurrency, formatValue } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
+import { Purchase } from "@/lib/types";
 
 const formatDuration = (milliseconds: number) => {
   if (milliseconds < 0) return '0m';
@@ -30,7 +30,9 @@ export function AnalyticsScreen() {
       let clientTotal = 0;
       const clientCategoryCounts: { [key: string]: number } = {};
       
-      client.purchaseHistory.forEach(item => {
+      const allPurchases = client.tabHistory.flatMap(session => session.items);
+
+      allPurchases.forEach(item => {
         const itemTotal = item.price * item.quantity;
         totalRevenue += itemTotal;
         clientTotal += itemTotal;
@@ -48,26 +50,11 @@ export function AnalyticsScreen() {
             ? sortedDurations[mid] 
             : (sortedDurations[mid - 1] + sortedDurations[mid]) / 2;
       }
-
+      
       const enrichedTabHistory = client.tabHistory.map(session => {
-        const sessionPurchases = client.purchaseHistory.filter(purchase => {
-            const purchaseTime = new Date(purchase.purchaseDate).getTime();
-            return purchaseTime >= new Date(session.openedAt).getTime() && purchaseTime <= new Date(session.closedAt).getTime();
-        });
-        const purchaseGroups: {[key: string]: {name: string, quantity: number, price: number, paymentMethod: string, category: string, date: string}} = {};
-
-        sessionPurchases.forEach(p => {
-          const key = `${p.name}-${p.price}-${p.paymentMethod}`;
-          if (!purchaseGroups[key]) {
-            purchaseGroups[key] = {name: p.name, quantity: 0, price: p.price, paymentMethod: p.paymentMethod, category: p.category, date: p.purchaseDate};
-          }
-          purchaseGroups[key].quantity += p.quantity;
-        });
-
-        const total = sessionPurchases.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+        const total = session.items.reduce((acc, p) => acc + p.amountPaid, 0);
         return {
           ...session,
-          purchases: Object.values(purchaseGroups),
           total,
         };
       }).sort((a,b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime());
@@ -156,7 +143,7 @@ export function AnalyticsScreen() {
                                 <Badge variant="secondary">{formatDuration(session.duration)}</Badge>
                               </div>
                               <div className="space-y-2 text-sm">
-                                {session.purchases.length > 0 ? session.purchases.map((purchase, pIndex) => (
+                                {session.items.length > 0 ? session.items.map((purchase: Purchase, pIndex: number) => (
                                   <div key={pIndex} className="flex justify-between items-center bg-background/50 p-2 rounded-md">
                                     <div>
                                       <p className="font-medium text-sm">{purchase.quantity}x {purchase.name}</p>
@@ -165,7 +152,7 @@ export function AnalyticsScreen() {
                                       </p>
                                     </div>
                                     <p className="font-semibold text-primary/90 text-sm">
-                                      {formatValue(purchase.price * purchase.quantity, isSensitiveDataVisible, formatCurrency)}
+                                      {formatValue(purchase.amountPaid, isSensitiveDataVisible, formatCurrency)}
                                     </p>
                                   </div>
                                 )) : <p className="text-muted-foreground text-center py-2 text-xs">No items recorded for this visit.</p>}
