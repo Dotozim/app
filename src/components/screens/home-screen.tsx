@@ -89,14 +89,8 @@ export function HomeScreen() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start" onClick={() => navigateTo('clients')}>
-            <Users className="mr-2" /> View All Clients
-          </Button>
           <Button variant="outline" className="w-full justify-start" onClick={() => setAddClientFormOpen(true)}>
             <PlusCircle className="mr-2" /> Create New Tab
-          </Button>
-           <Button variant="outline" className="w-full justify-start" onClick={() => navigateTo('analytics')}>
-            <FileText className="mr-2" /> View Analytics
           </Button>
         </CardContent>
       </Card>

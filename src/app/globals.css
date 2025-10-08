@@ -33,7 +33,7 @@
     --card-foreground: 224 40% 85%; /* Text */
     --popover: 239 13% 15%; /* Mantle */
     --popover-foreground: 224 40% 85%; /* Text */
-    --primary: 219 79% 85%; /* Mauve */
+    --primary: 285 82% 83%; /* Mauve */
     --primary-foreground: 239 14% 11%; /* Base */
     --secondary: 235 15% 24%; /* Surface0 */
     --secondary-foreground: 224 40% 85%; /* Text */
@@ -45,7 +45,7 @@
     --destructive-foreground: 239 14% 11%; /* Base */
     --border: 235 15% 30%; /* Surface2 */
     --input: 235 15% 30%; /* Surface2 */
-    --ring: 219 79% 85%; /* Mauve */
+    --ring: 285 82% 83%; /* Mauve */
     --radius: 0.75rem;
   }
 }

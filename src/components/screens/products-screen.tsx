@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
-import { Plus, Trash2, Edit, Package } from 'lucide-react';
+import { Plus, Trash2, Edit, Package, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
 import { formatCurrency } from '@/lib/utils';
@@ -40,13 +40,14 @@ const formSchema = z.object({
   price: z.coerce.number().positive({
     message: 'Price must be a positive number.',
   }),
-  imageUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
+  imageUrl: z.string().optional(),
 });
 
 export function ProductsScreen() {
   const { products, handleAddProduct, handleUpdateProduct, handleRemoveProduct } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,9 +62,15 @@ export function ProductsScreen() {
   useEffect(() => {
     if (editingProduct) {
       form.reset(editingProduct);
+      if (editingProduct.imageUrl) {
+        setImagePreview(editingProduct.imageUrl);
+      } else {
+        setImagePreview(null);
+      }
       setIsOpen(true);
     } else {
       form.reset({ name: '', category: '', price: 0, imageUrl: '' });
+      setImagePreview(null);
     }
   }, [editingProduct, form]);
 
@@ -75,14 +82,29 @@ export function ProductsScreen() {
   const handleCloseDialog = () => {
     setEditingProduct(null);
     setIsOpen(false);
+    setImagePreview(null);
     form.reset();
   }
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        form.setValue('imageUrl', result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const productData = { ...values, imageUrl: imagePreview || '' };
     if (editingProduct) {
-      handleUpdateProduct({ ...editingProduct, ...values });
+      handleUpdateProduct({ ...editingProduct, ...productData });
     } else {
-      handleAddProduct(values);
+      handleAddProduct(productData);
     }
     handleCloseDialog();
   }
@@ -149,19 +171,50 @@ export function ProductsScreen() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/image.png" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel>Product Image</FormLabel>
+                <FormControl>
+                   <div className="flex items-center gap-4">
+                    {imagePreview ? (
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-muted">
+                        <Image 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => {
+                            setImagePreview(null);
+                            form.setValue('imageUrl', '');
+                          }}
+                          className="absolute top-1 right-1 h-6 w-6"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition bg-secondary">
+                        <Plus className="w-8 h-8 text-muted-foreground" />
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                    <div className="flex-1 text-sm text-muted-foreground">
+                      <p className="font-medium">Click to upload</p>
+                      <p className="text-xs">PNG, JPG, etc.</p>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleCloseDialog}>Cancel</Button>
                 <Button type="submit">{editingProduct ? 'Save Changes' : 'Add Product'}</Button>
