@@ -14,12 +14,19 @@ export interface Purchase extends Item {
   paymentMethod: PaymentMethod;
 }
 
+export interface TabSession {
+  openedAt: string;
+  closedAt: string;
+  duration: number; // in milliseconds
+}
+
 export interface Client {
   id: string;
   name: string;
   currentTab: Item[];
   purchaseHistory: Purchase[];
   tabOpenedAt?: string;
+  tabHistory: TabSession[];
 }
 
 export interface Product {

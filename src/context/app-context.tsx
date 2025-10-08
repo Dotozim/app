@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
-import type { Client, Item, Product, Purchase, PaymentMethod } from '@/lib/types';
+import type { Client, Item, Product, Purchase, PaymentMethod, TabSession } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export type Screen = 'home' | 'clients' | 'client-detail' | 'add-items' | 'settle-tab' | 'analytics' | 'products';
@@ -53,6 +53,13 @@ const initialClients: Client[] = [
     ],
     purchaseHistory: [{ id: 'c3', name: 'Stout', category: 'Beer', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p3/400/400' }],
     tabOpenedAt: new Date().toISOString(),
+    tabHistory: [
+        {
+          openedAt: new Date(new Date().setDate(new Date().getDate() - 1) - 3 * 60 * 60 * 1000).toISOString(),
+          closedAt: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
+          duration: 3 * 60 * 60 * 1000,
+        }
+    ]
   },
   {
     id: '2',
@@ -63,6 +70,13 @@ const initialClients: Client[] = [
       { id: 'f6', name: 'Chicken Wings', category: 'Food', price: 12.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p5/400/400' },
     ],
     tabOpenedAt: new Date().toISOString(),
+    tabHistory: [
+      {
+        openedAt: new Date(new Date().setDate(new Date().getDate() - 2) - 2 * 60 * 60 * 1000).toISOString(),
+        closedAt: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+        duration: 2 * 60 * 60 * 1000,
+      }
+    ],
   },
 ];
 
@@ -87,6 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       name,
       currentTab: [],
       purchaseHistory: [],
+      tabHistory: [],
     };
     const newClients = [...clients, newClient];
     setClients(newClients);
@@ -140,16 +155,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setClients((prev) =>
       prev.map((c) => {
         if (c.id === clientId) {
+          if (!c.tabOpenedAt) {
+            console.error("Cannot settle tab without an opening time.");
+            return c;
+          }
+
           const settledItems: Purchase[] = c.currentTab.map(item => ({
             ...item,
             purchaseDate: new Date().toISOString(),
             paymentMethod: paymentMethod,
           }));
+
+          const newTabSession: TabSession = {
+            openedAt: c.tabOpenedAt,
+            closedAt: new Date().toISOString(),
+            duration: new Date().getTime() - new Date(c.tabOpenedAt).getTime(),
+          };
+          
           return {
             ...c,
             purchaseHistory: [...c.purchaseHistory, ...settledItems],
             currentTab: [],
             tabOpenedAt: undefined,
+            tabHistory: [...c.tabHistory, newTabSession],
           };
         }
         return c;
@@ -172,7 +200,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setClients(prevClients => prevClients.map(client => ({
       ...client,
       currentTab: client.currentTab.map(item => {
-        if (item.name === updatedProduct.name) {
+        const product = products.find(p => p.id === updatedProduct.id);
+        if (item.name === product?.name) {
           return { ...item, price: updatedProduct.price, category: updatedProduct.category, imageUrl: updatedProduct.imageUrl };
         }
         return item;

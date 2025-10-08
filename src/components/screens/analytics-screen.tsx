@@ -7,6 +7,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
 
+const formatDuration = (milliseconds: number) => {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+};
+
 export function AnalyticsScreen() {
   const { clients, isSensitiveDataVisible } = useAppContext();
 
@@ -18,7 +29,7 @@ export function AnalyticsScreen() {
       let clientTotal = 0;
       const clientProductCounts: { [key: string]: { count: number; revenue: number; purchases: {date: string, quantity: number, paymentMethod: string}[] } } = {};
       const clientCategoryCounts: { [key: string]: number } = {};
-
+      
       clientHistory.forEach(item => {
         const itemTotal = item.price * item.quantity;
         totalRevenue += itemTotal;
@@ -37,6 +48,8 @@ export function AnalyticsScreen() {
             clientCategoryCounts[item.category] = (clientCategoryCounts[item.category] || 0) + item.quantity;
         }
       });
+      
+      const totalSeatedTime = client.tabHistory.reduce((acc, tab) => acc + tab.duration, 0);
 
       const clientTopProducts = Object.entries(clientProductCounts)
         .sort(([, a], [, b]) => b.revenue - a.revenue)
@@ -50,6 +63,7 @@ export function AnalyticsScreen() {
           id: client.id,
           name: client.name,
           totalSpent: clientTotal,
+          totalSeatedTime: totalSeatedTime,
           topProducts: clientTopProducts,
           mostConsumedCategory: mostConsumedCategory
       }
@@ -90,13 +104,22 @@ export function AnalyticsScreen() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    {client.mostConsumedCategory && (
-                        <div className="mb-4 p-2 bg-muted rounded-md text-center text-sm">
-                            <p className="text-muted-foreground">
-                            Most consumed category: <Badge variant="outline">{client.mostConsumedCategory}</Badge>
-                            </p>
-                        </div>
-                    )}
+                    <div className="flex gap-2 mb-4">
+                        {client.mostConsumedCategory && (
+                            <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
+                                <p className="text-muted-foreground">
+                                Favorite Category: <Badge variant="outline">{client.mostConsumedCategory}</Badge>
+                                </p>
+                            </div>
+                        )}
+                        {client.totalSeatedTime > 0 && (
+                            <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
+                                <p className="text-muted-foreground">
+                                Total Seated Time: <Badge variant="outline">{formatDuration(client.totalSeatedTime)}</Badge>
+                                </p>
+                            </div>
+                        )}
+                    </div>
                     <h4 className="font-semibold mb-2 text-md">Purchase History for {client.name}</h4>
                     <div className="space-y-4">
                     {client.topProducts.length > 0 ? client.topProducts.map((product) => (
