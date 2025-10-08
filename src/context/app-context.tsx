@@ -22,6 +22,7 @@ type AppContextType = {
   handleSettleTab: (clientId: string, payments: SplitPayment[]) => void;
   handleAddClient: (name: string) => void;
   handleRemoveClient: (clientId: string) => void;
+  handleRemoveTabSession: (clientId: string, sessionId: string) => void;
   handleAddProduct: (product: Omit<Product, 'id'>) => void;
   handleUpdateProduct: (product: Product) => void;
   handleRemoveProduct: (productId: string) => void;
@@ -265,6 +266,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const handleRemoveProduct = (productId: string) => {
     setProducts(prev => prev.filter(p => p.id !== productId));
   };
+  
+  const handleRemoveTabSession = (clientId: string, sessionId: string) => {
+    setClients(prev => prev.map(c => {
+      if (c.id === clientId) {
+        return {
+          ...c,
+          tabHistory: c.tabHistory.filter(session => session.openedAt !== sessionId)
+        };
+      }
+      return c;
+    }));
+    toast({
+      title: "Visit Removed",
+      description: "The visit has been deleted from the client's history.",
+    });
+  };
 
   const navigateTo = (screen: Screen, clientId?: string) => {
     if (clientId) {
@@ -303,12 +320,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigationHistory,
     isAddClientFormOpen,
     isAddProductFormOpen,
-    isSensitiveDataVisible,
+isSensitiveDataVisible,
     handleAddItem,
     handleRemoveItem,
     handleSettleTab,
     handleAddClient,
     handleRemoveClient,
+    handleRemoveTabSession,
     handleAddProduct,
     handleUpdateProduct,
     handleRemoveProduct,

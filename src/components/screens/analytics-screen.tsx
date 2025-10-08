@@ -25,7 +25,7 @@ const formatDuration = (milliseconds: number) => {
 };
 
 export function AnalyticsScreen() {
-  const { clients, isSensitiveDataVisible, handleRemoveClient } = useAppContext();
+  const { clients, isSensitiveDataVisible, handleRemoveClient, handleRemoveTabSession } = useAppContext();
 
   const { totalRevenue, clientAnalytics } = useMemo(() => {
     let totalRevenue = 0;
@@ -168,7 +168,28 @@ export function AnalyticsScreen() {
                                     Total: {formatValue(session.total, isSensitiveDataVisible, formatCurrency)}
                                   </p>
                                 </div>
-                                <Badge variant="secondary">{formatDuration(session.duration)}</Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary">{formatDuration(session.duration)}</Badge>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete this visit?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will permanently delete this visit record from {client.name}'s history. This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleRemoveTabSession(client.id, session.openedAt)}>Delete Visit</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
                               </div>
                               <div className="space-y-2 text-sm">
                                 {session.items.length > 0 ? session.items.map((purchase: Purchase, pIndex: number) => (

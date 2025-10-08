@@ -50,17 +50,19 @@ export function AppHeader() {
           {title}
         </h1>
       </div>
-      <div className="flex items-center gap-2">
-        <Switch
-          id="privacy-mode"
-          checked={!isSensitiveDataVisible}
-          onCheckedChange={toggleSensitiveDataVisibility}
-          aria-label="Toggle privacy mode"
-        />
-        <Label htmlFor="privacy-mode">
-            {isSensitiveDataVisible ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-primary" />}
-        </Label>
-      </div>
+      {currentScreen !== 'products' && (
+        <div className="flex items-center gap-2">
+          <Switch
+            id="privacy-mode"
+            checked={!isSensitiveDataVisible}
+            onCheckedChange={toggleSensitiveDataVisibility}
+            aria-label="Toggle privacy mode"
+          />
+          <Label htmlFor="privacy-mode">
+              {isSensitiveDataVisible ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-primary" />}
+          </Label>
+        </div>
+      )}
     </header>
   );
 }
