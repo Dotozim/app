@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { Badge } from "../ui/badge";
 
 const formatDuration = (milliseconds: number) => {
+  if (milliseconds < 0) return '0m';
   const totalSeconds = Math.floor(milliseconds / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -65,7 +66,8 @@ export function AnalyticsScreen() {
           totalSpent: clientTotal,
           totalSeatedTime: totalSeatedTime,
           topProducts: clientTopProducts,
-          mostConsumedCategory: mostConsumedCategory
+          mostConsumedCategory: mostConsumedCategory,
+          tabHistory: client.tabHistory.sort((a,b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime()),
       }
     }).sort((a,b) => b.totalSpent - a.totalSpent);
       
@@ -120,28 +122,49 @@ export function AnalyticsScreen() {
                             </div>
                         )}
                     </div>
-                    <h4 className="font-semibold mb-2 text-md">Purchase History for {client.name}</h4>
-                    <div className="space-y-4">
-                    {client.topProducts.length > 0 ? client.topProducts.map((product) => (
-                      <div key={product.name} className="bg-muted p-3 rounded-md">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-sm">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">{formatValue(product.count, isSensitiveDataVisible, (val) => `${val} total sold`)}</p>
-                          </div>
-                          <p className="font-semibold text-primary/90">{formatValue(product.revenue, isSensitiveDataVisible, formatCurrency)}</p>
+                    
+                    <div className="space-y-6">
+                        <div>
+                            <h4 className="font-semibold mb-2 text-md">Purchase History for {client.name}</h4>
+                            <div className="space-y-4">
+                            {client.topProducts.length > 0 ? client.topProducts.map((product) => (
+                              <div key={product.name} className="bg-muted p-3 rounded-md">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium text-sm">{product.name}</p>
+                                    <p className="text-xs text-muted-foreground">{formatValue(product.count, isSensitiveDataVisible, (val) => `${val} total sold`)}</p>
+                                  </div>
+                                  <p className="font-semibold text-primary/90">{formatValue(product.revenue, isSensitiveDataVisible, formatCurrency)}</p>
+                                </div>
+                                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                                    {product.purchases.map((purchase, index) => (
+                                        <li key={index} className="flex justify-between">
+                                            <span>{formatValue(purchase.quantity, isSensitiveDataVisible, (val) => `${val}x`)} on {format(new Date(purchase.date), 'MMM d, yyyy')}</span>
+                                            <span>({purchase.paymentMethod})</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                              </div>
+                            )) : <p className="text-muted-foreground text-center py-2 text-sm">No purchase history for this client.</p>}
+                           </div>
                         </div>
-                        <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                            {product.purchases.map((purchase, index) => (
-                                <li key={index} className="flex justify-between">
-                                    <span>{formatValue(purchase.quantity, isSensitiveDataVisible, (val) => `${val}x`)} on {format(new Date(purchase.date), 'MMM d, yyyy')}</span>
-                                    <span>({purchase.paymentMethod})</span>
-                                </li>
-                            ))}
-                        </ul>
-                      </div>
-                    )) : <p className="text-muted-foreground text-center py-2 text-sm">No purchase history for this client.</p>}
-                   </div>
+
+                        <div>
+                            <h4 className="font-semibold mb-2 text-md">Tab History</h4>
+                            <div className="space-y-2">
+                                {client.tabHistory.length > 0 ? client.tabHistory.map((session, index) => (
+                                    <div key={index} className="bg-muted p-3 rounded-md text-sm">
+                                        <div className="flex justify-between items-center">
+                                            <p className="font-medium">
+                                                Visit on {format(new Date(session.closedAt), 'MMM d, yyyy')}
+                                            </p>
+                                            <Badge variant="secondary">{formatDuration(session.duration)}</Badge>
+                                        </div>
+                                    </div>
+                                )) : <p className="text-muted-foreground text-center py-2 text-sm">No past tabs for this client.</p>}
+                            </div>
+                        </div>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               ))}
