@@ -36,13 +36,11 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-muted flex items-center justify-center min-h-screen font-sans">
-      <div className="relative w-[360px] h-[800px] bg-background overflow-hidden rounded-[2.5rem] border-[14px] border-black shadow-2xl flex flex-col">
-        <AppHeader />
-        <main className="flex-grow overflow-y-auto pb-20 p-4">{renderScreen()}</main>
-        <BottomNavBar />
-        <AddClientForm />
-      </div>
+    <div className="bg-background flex flex-col h-screen font-sans">
+      <AppHeader />
+      <main className="flex-grow overflow-y-auto pb-20 p-4">{renderScreen()}</main>
+      <BottomNavBar />
+      <AddClientForm />
     </div>
   );
 }
