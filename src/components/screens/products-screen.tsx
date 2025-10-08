@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
 import { formatCurrency } from '@/lib/utils';
@@ -33,6 +33,9 @@ import Image from 'next/image';
 const formSchema = z.object({
   name: z.string().min(2, {
     message: 'Product name must be at least 2 characters.',
+  }),
+  category: z.string().min(2, {
+    message: 'Category must be at least 2 characters.',
   }),
   price: z.coerce.number().positive({
     message: 'Price must be a positive number.',
@@ -49,6 +52,7 @@ export function ProductsScreen() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      category: '',
       price: 0,
       imageUrl: '',
     },
@@ -59,7 +63,7 @@ export function ProductsScreen() {
       form.reset(editingProduct);
       setIsOpen(true);
     } else {
-      form.reset({ name: '', price: 0, imageUrl: '' });
+      form.reset({ name: '', category: '', price: 0, imageUrl: '' });
     }
   }, [editingProduct, form]);
 
@@ -121,6 +125,19 @@ export function ProductsScreen() {
               />
               <FormField
                 control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Beer" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="price"
                 render={({ field }) => (
                   <FormItem>
@@ -164,12 +181,11 @@ export function ProductsScreen() {
                     className="flex justify-between items-center p-3"
                 >
                     <div className="flex items-center gap-4">
-                      {product.imageUrl && (
+                      {product.imageUrl ? (
                         <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded-md object-cover" />
-                      )}
-                      {!product.imageUrl && (
+                      ) : (
                         <div className="w-10 h-10 rounded-md bg-secondary flex items-center justify-center">
-                          <Plus className="w-5 h-5 text-muted-foreground"/>
+                          <Package className="w-5 h-5 text-muted-foreground"/>
                         </div>
                       )}
                       <div>

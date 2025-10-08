@@ -11,3 +11,10 @@ export function formatCurrency(amount: number) {
     currency: 'USD',
   }).format(amount);
 }
+
+export function formatValue(value: number | string, isVisible: boolean, formatter: (val: any) => string) {
+    if (!isVisible) {
+      return '****';
+    }
+    return formatter(value);
+  }

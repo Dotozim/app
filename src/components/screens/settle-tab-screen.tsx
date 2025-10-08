@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppContext } from "@/context/app-context";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatValue } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -23,7 +23,7 @@ import { useState } from "react";
 
 
 export function SettleTabScreen() {
-  const { activeClient, handleSettleTab } = useAppContext();
+  const { activeClient, handleSettleTab, isSensitiveDataVisible } = useAppContext();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
 
   if (!activeClient) {
@@ -52,11 +52,11 @@ export function SettleTabScreen() {
                 <div key={item.id} className="flex justify-between items-center text-sm p-2 rounded-md bg-secondary">
                   <div className="flex items-center gap-3">
                     <span className="font-semibold bg-primary/10 text-primary rounded-full h-7 w-7 flex items-center justify-center text-xs">
-                      {item.quantity}x
+                      {formatValue(item.quantity, isSensitiveDataVisible, (val) => `${val}x`)}
                     </span>
                     <span>{item.name}</span>
                   </div>
-                  <span className="font-mono">{formatCurrency(item.price * item.quantity)}</span>
+                  <span className="font-mono">{formatValue(item.price * item.quantity, isSensitiveDataVisible, formatCurrency)}</span>
                 </div>
               ))}
             </div>
@@ -65,7 +65,7 @@ export function SettleTabScreen() {
         <CardFooter className="flex-col items-stretch gap-4 p-4 border-t mt-auto">
           <div className="flex justify-between items-center text-lg font-bold">
             <span>Total</span>
-            <span className="text-primary">{formatCurrency(total)}</span>
+            <span className="text-primary">{formatValue(total, isSensitiveDataVisible, formatCurrency)}</span>
           </div>
           <Separator />
            <AlertDialog>
@@ -79,7 +79,7 @@ export function SettleTabScreen() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Select Payment Method</AlertDialogTitle>
                 <AlertDialogDescription>
-                  How is {activeClient.name} paying for the total of {formatCurrency(total)}?
+                  How is {activeClient.name} paying for the total of {formatValue(total, isSensitiveDataVisible, formatCurrency)}?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="grid grid-cols-3 gap-4 py-4">

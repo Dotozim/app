@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAppContext } from "@/context/app-context";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatValue } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { EmptyState } from "../app/empty-state";
 import { format } from 'date-fns';
 
 export function ClientsScreen() {
-  const { clients, navigateTo, setAddClientFormOpen } = useAppContext();
+  const { clients, navigateTo, setAddClientFormOpen, isSensitiveDataVisible } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredClients = clients.filter(c => 
@@ -61,7 +61,7 @@ export function ClientsScreen() {
                               Open Tab
                             </span>
                             <span className="text-accent font-bold">
-                              {formatCurrency(tabTotal)}
+                              {formatValue(tabTotal, isSensitiveDataVisible, formatCurrency)}
                             </span>
                           </>
                         ) : (

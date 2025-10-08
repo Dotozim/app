@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppContext } from '@/context/app-context';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatValue } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,7 +10,7 @@ import { Separator } from '../ui/separator';
 import Image from 'next/image';
 
 export function ClientDetailScreen() {
-  const { activeClient, navigateTo, handleAddItem, handleRemoveItem, products } = useAppContext();
+  const { activeClient, navigateTo, handleAddItem, handleRemoveItem, products, isSensitiveDataVisible } = useAppContext();
 
   if (!activeClient) {
     return <div className="text-center py-10">No client selected.</div>;
@@ -25,7 +25,7 @@ export function ClientDetailScreen() {
           <div className="flex items-center justify-between">
             <span className="font-bold text-lg text-foreground">Total</span>
             <span className="font-bold text-2xl text-primary">
-              {formatCurrency(total)}
+              {formatValue(total, isSensitiveDataVisible, formatCurrency)}
             </span>
           </div>
         </CardContent>
@@ -62,12 +62,12 @@ export function ClientDetailScreen() {
               >
                 <div className="flex items-center gap-3 flex-grow">
                   {item.imageUrl && (
-                    <Image src={item.imageUrl} alt={item.name} width={40} height={40} className="rounded-md" />
+                    <Image src={item.imageUrl} alt={item.name} width={40} height={40} className="rounded-md object-cover" />
                   )}
                     <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground">
-                            {formatCurrency(item.price)} each
+                            {formatValue(item.price, isSensitiveDataVisible, formatCurrency)} each
                         </p>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ export function ClientDetailScreen() {
                     >
                         <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="font-bold text-md w-4 text-center">{item.quantity}</span>
+                    <span className="font-bold text-md w-4 text-center">{formatValue(item.quantity, isSensitiveDataVisible, (val) => val)}</span>
                     <Button
                         variant="outline"
                         size="icon"

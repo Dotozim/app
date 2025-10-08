@@ -10,6 +10,7 @@ import { ClientDetailScreen } from '@/components/screens/client-detail-screen';
 import { AddItemsScreen } from '@/components/screens/add-items-screen';
 import { SettleTabScreen } from '@/components/screens/settle-tab-screen';
 import { ProductsScreen } from '@/components/screens/products-screen';
+import { AddClientForm } from '@/components/app/add-client-form';
 
 export default function Home() {
   const { currentScreen } = useAppContext();
@@ -38,8 +39,9 @@ export default function Home() {
     <div className="bg-muted flex items-center justify-center min-h-screen font-sans">
       <div className="relative w-[360px] h-[800px] bg-background overflow-hidden rounded-[2.5rem] border-[14px] border-black shadow-2xl flex flex-col">
         <AppHeader />
-        <main className="flex-grow overflow-y-auto pb-24 p-4">{renderScreen()}</main>
+        <main className="flex-grow overflow-y-auto pb-20 p-4">{renderScreen()}</main>
         <BottomNavBar />
+        <AddClientForm />
       </div>
     </div>
   );

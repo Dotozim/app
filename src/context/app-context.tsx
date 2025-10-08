@@ -1,7 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
 import type { Client, Item, Product, Purchase, PaymentMethod } from '@/lib/types';
-import { AddClientForm } from '@/components/app/add-client-form';
 import { useToast } from '@/hooks/use-toast';
 
 export type Screen = 'home' | 'clients' | 'client-detail' | 'add-items' | 'settle-tab' | 'analytics' | 'products';
@@ -14,6 +13,7 @@ type AppContextType = {
   currentScreen: Screen;
   navigationHistory: Screen[];
   isAddClientFormOpen: boolean;
+  isSensitiveDataVisible: boolean;
 
   // Actions
   handleAddItem: (clientId: string, item: Omit<Item, 'id' | 'quantity'>) => void;
@@ -30,39 +30,40 @@ type AppContextType = {
   
   // UI Actions
   setAddClientFormOpen: (isOpen: boolean) => void;
+  toggleSensitiveDataVisibility: () => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const initialProducts: Product[] = [
+    { id: 'p1', name: 'Craft IPA', category: 'Beer', price: 7.5, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
+    { id: 'p2', name: 'Pretzel Bites', category: 'Snack', price: 5.0, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
+    { id: 'p3', name: 'Stout', category: 'Beer', price: 8.0, imageUrl: 'https://picsum.photos/seed/p3/400/400' },
+    { id: 'p4', name: 'Lager', category: 'Beer', price: 6.0, imageUrl: 'https://picsum.photos/seed/p4/400/400' },
+    { id: 'p5', name: 'Chicken Wings', category: 'Food', price: 12.0, imageUrl: 'https://picsum.photos/seed/p5/400/400' },
+];
 
 const initialClients: Client[] = [
   {
     id: '1',
     name: 'Eleanor Vance',
     currentTab: [
-      { id: 'a1', name: 'Craft IPA', price: 7.5, quantity: 2, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
-      { id: 'b2', name: 'Pretzel Bites', price: 5.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
+      { id: 'a1', name: 'Craft IPA', category: 'Beer', price: 7.5, quantity: 2, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
+      { id: 'b2', name: 'Pretzel Bites', category: 'Snack', price: 5.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
     ],
-    purchaseHistory: [{ id: 'c3', name: 'Stout', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p3/400/400' }],
+    purchaseHistory: [{ id: 'c3', name: 'Stout', category: 'Beer', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p3/400/400' }],
     tabOpenedAt: new Date().toISOString(),
   },
   {
     id: '2',
     name: 'Marcus Holloway',
-    currentTab: [{ id: 'd4', name: 'Lager', price: 6.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p4/400/400' }],
+    currentTab: [{ id: 'd4', name: 'Lager', category: 'Beer', price: 6.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p4/400/400' }],
     purchaseHistory: [
-      { id: 'e5', name: 'Lager', price: 6.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Cash', imageUrl: 'https://picsum.photos/seed/p4/400/400' },
-      { id: 'f6', name: 'Chicken Wings', price: 12.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p5/400/400' },
+      { id: 'e5', name: 'Lager', category: 'Beer', price: 6.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Cash', imageUrl: 'https://picsum.photos/seed/p4/400/400' },
+      { id: 'f6', name: 'Chicken Wings', category: 'Food', price: 12.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p5/400/400' },
     ],
     tabOpenedAt: new Date().toISOString(),
   },
-];
-
-const initialProducts: Product[] = [
-    { id: 'p1', name: 'Craft IPA', price: 7.5, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
-    { id: 'p2', name: 'Pretzel Bites', price: 5.0, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
-    { id: 'p3', name: 'Stout', price: 8.0, imageUrl: 'https://picsum.photos/seed/p3/400/400' },
-    { id: 'p4', name: 'Lager', price: 6.0, imageUrl: 'https://picsum.photos/seed/p4/400/400' },
-    { id: 'p5', name: 'Chicken Wings', price: 12.0, imageUrl: 'https://picsum.photos/seed/p5/400/400' },
 ];
 
 
@@ -74,6 +75,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [navigationHistory, setNavigationHistory] = useState<Screen[]>(['home']);
   const [isAddClientFormOpen, setAddClientFormOpen] = useState(false);
+  const [isSensitiveDataVisible, setIsSensitiveDataVisible] = useState(true);
+
+  const toggleSensitiveDataVisibility = () => {
+    setIsSensitiveDataVisible(prev => !prev);
+  }
 
   const handleAddClient = (name: string) => {
     const newClient: Client = {
@@ -163,14 +169,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const handleUpdateProduct = (updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-    // Also update price in any open tabs
     setClients(prevClients => prevClients.map(client => ({
       ...client,
-      currentTab: client.currentTab.map(item => 
-        item.name === updatedProduct.name && item.price !== updatedProduct.price
-          ? { ...item, price: updatedProduct.price }
-          : item
-      )
+      currentTab: client.currentTab.map(item => {
+        if (item.name === updatedProduct.name) {
+          return { ...item, price: updatedProduct.price, category: updatedProduct.category, imageUrl: updatedProduct.imageUrl };
+        }
+        return item;
+      })
     })));
   };
 
@@ -182,8 +188,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (clientId) {
       setActiveClientId(clientId);
     }
-    // If we're not navigating to a detail screen, clear the active client
-    if (screen === 'clients' || screen === 'home' || screen === 'products') {
+    if (screen === 'clients' || screen === 'home' || screen === 'products' || screen === 'analytics') {
         setActiveClientId(null);
     }
     setNavigationHistory(prev => [...prev, screen]);
@@ -212,6 +217,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     currentScreen,
     navigationHistory,
     isAddClientFormOpen,
+    isSensitiveDataVisible,
     handleAddItem,
     handleRemoveItem,
     handleSettleTab,
@@ -221,13 +227,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleRemoveProduct,
     navigateTo,
     navigateBack,
-    setAddClientFormOpen
+    setAddClientFormOpen,
+    toggleSensitiveDataVisibility
   };
 
   return (
     <AppContext.Provider value={value}>
         {children}
-        <AddClientForm />
     </AppContext.Provider>
   );
 }

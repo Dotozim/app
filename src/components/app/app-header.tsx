@@ -1,7 +1,9 @@
 'use client';
-import { Beer, ChevronLeft } from 'lucide-react';
+import { Beer, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
 import { Button } from '../ui/button';
+import { Switch } from '../ui/switch';
+import { Label } from '../ui/label';
 
 const screenTitles: Record<string, string> = {
   home: 'TabMaster',
@@ -14,7 +16,7 @@ const screenTitles: Record<string, string> = {
 };
 
 export function AppHeader() {
-  const { currentScreen, activeClient, navigateBack } = useAppContext();
+  const { currentScreen, activeClient, navigateBack, isSensitiveDataVisible, toggleSensitiveDataVisibility } = useAppContext();
 
   const canGoBack = currentScreen === 'client-detail' || currentScreen === 'add-items' || currentScreen === 'settle-tab' || currentScreen === 'analytics';
   
@@ -33,7 +35,7 @@ export function AppHeader() {
   const title = getTitle();
 
   return (
-    <header className="flex items-center gap-4 px-4 py-3 border-b bg-background sticky top-0 z-10 h-16">
+    <header className="flex items-center justify-between gap-4 px-4 py-3 border-b bg-background sticky top-0 z-10 h-16">
       <div className="flex items-center gap-2 flex-1">
         {canGoBack ? (
           <Button variant="ghost" size="icon" onClick={navigateBack} className='-ml-2'>
@@ -47,6 +49,17 @@ export function AppHeader() {
         <h1 className="text-xl font-bold tracking-tight">
           {title}
         </h1>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          id="privacy-mode"
+          checked={!isSensitiveDataVisible}
+          onCheckedChange={toggleSensitiveDataVisibility}
+          aria-label="Toggle privacy mode"
+        />
+        <Label htmlFor="privacy-mode">
+            {isSensitiveDataVisible ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-primary" />}
+        </Label>
       </div>
     </header>
   );

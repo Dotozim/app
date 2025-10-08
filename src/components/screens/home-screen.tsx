@@ -1,13 +1,13 @@
 'use client';
 import { useAppContext } from "@/context/app-context";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatValue } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, FileText, PlusCircle, CreditCard, Banknote, Landmark } from "lucide-react";
 import { useMemo } from "react";
 
 export function HomeScreen() {
-  const { clients, navigateTo, setAddClientFormOpen } = useAppContext();
+  const { clients, navigateTo, setAddClientFormOpen, isSensitiveDataVisible } = useAppContext();
 
   const openTabsCount = clients.filter(c => c.currentTab.length > 0).length;
   const totalOnTabs = clients.reduce((total, client) => 
@@ -43,11 +43,11 @@ export function HomeScreen() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <p className="text-3xl font-bold text-primary">{openTabsCount}</p>
+              <p className="text-3xl font-bold text-primary">{formatValue(openTabsCount, isSensitiveDataVisible, (val) => val)}</p>
               <p className="text-muted-foreground text-sm mt-1">Active</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{formatCurrency(totalOnTabs)}</p>
+              <p className="text-3xl font-bold text-primary">{formatValue(totalOnTabs, isSensitiveDataVisible, formatCurrency)}</p>
               <p className="text-muted-foreground text-sm mt-1">Total Value</p>
             </div>
           </div>
@@ -57,28 +57,28 @@ export function HomeScreen() {
       <Card>
         <CardHeader>
             <CardTitle>Today's Revenue</CardTitle>
-            <CardDescription>Total: {formatCurrency(totalRevenue)}</CardDescription>
+            <CardDescription>Total: {formatValue(totalRevenue, isSensitiveDataVisible, formatCurrency)}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
             <div className="flex items-center gap-3 bg-secondary p-4 rounded-lg">
                 <Banknote className="h-8 w-8 text-green-500" />
                 <div>
                   <p className="text-muted-foreground text-sm">Cash</p>
-                  <p className="text-xl font-bold">{formatCurrency(cashRevenue)}</p>
+                  <p className="text-xl font-bold">{formatValue(cashRevenue, isSensitiveDataVisible, formatCurrency)}</p>
                 </div>
             </div>
             <div className="flex items-center gap-3 bg-secondary p-4 rounded-lg">
                 <CreditCard className="h-8 w-8 text-blue-500" />
                 <div>
                   <p className="text-muted-foreground text-sm">Credit Card</p>
-                  <p className="text-xl font-bold">{formatCurrency(creditCardRevenue)}</p>
+                  <p className="text-xl font-bold">{formatValue(creditCardRevenue, isSensitiveDataVisible, formatCurrency)}</p>
                 </div>
             </div>
             <div className="flex items-center gap-3 bg-secondary p-4 rounded-lg">
                 <Landmark className="h-8 w-8 text-purple-500" />
                 <div>
                   <p className="text-muted-foreground text-sm">Debit Card</p>
-                  <p className="text-xl font-bold">{formatCurrency(debitCardRevenue)}</p>
+                  <p className="text-xl font-bold">{formatValue(debitCardRevenue, isSensitiveDataVisible, formatCurrency)}</p>
                 </div>
             </div>
         </CardContent>

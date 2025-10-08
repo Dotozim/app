@@ -1,15 +1,14 @@
 'use client';
 import { useAppContext } from "@/context/app-context";
 import { useMemo } from "react";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
-import { ScrollArea } from "../ui/scroll-area";
+import { formatCurrency, formatValue } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { format } from "date-fns";
+import { Badge } from "../ui/badge";
 
 export function AnalyticsScreen() {
-  const { clients } = useAppContext();
+  const { clients, isSensitiveDataVisible } = useAppContext();
 
   const { totalRevenue, topProducts, clientAnalytics } = useMemo(() => {
     let totalRevenue = 0;
@@ -19,18 +18,17 @@ export function AnalyticsScreen() {
       const clientHistory = [...client.purchaseHistory];
       let clientTotal = 0;
       const clientProductCounts: { [key: string]: { count: number; revenue: number; purchases: {date: string, quantity: number, paymentMethod: string}[] } } = {};
+      const categoryCounts: { [key: string]: number } = {};
 
       clientHistory.forEach(item => {
         const itemTotal = item.price * item.quantity;
         totalRevenue += itemTotal;
         clientTotal += itemTotal;
         
-        // Aggregate for overall top products
         productCounts[item.name] = productCounts[item.name] || { count: 0, revenue: 0 };
         productCounts[item.name].count += item.quantity;
         productCounts[item.name].revenue += itemTotal;
         
-        // Aggregate for client-specific top products
         clientProductCounts[item.name] = clientProductCounts[item.name] || { count: 0, revenue: 0, purchases: [] };
         clientProductCounts[item.name].count += item.quantity;
         clientProductCounts[item.name].revenue += itemTotal;
@@ -39,17 +37,26 @@ export function AnalyticsScreen() {
             quantity: item.quantity,
             paymentMethod: item.paymentMethod,
         });
+
+        if (item.category) {
+            categoryCounts[item.category] = (categoryCounts[item.category] || 0) + item.quantity;
+        }
       });
 
       const clientTopProducts = Object.entries(clientProductCounts)
         .sort(([, a], [, b]) => b.revenue - a.revenue)
         .map(([name, data]) => ({ name, ...data }));
         
+      const mostConsumedCategory = Object.keys(categoryCounts).length > 0 
+        ? Object.entries(categoryCounts).sort(([,a],[,b]) => b - a)[0][0]
+        : null;
+
       return {
           id: client.id,
           name: client.name,
           totalSpent: clientTotal,
-          topProducts: clientTopProducts
+          topProducts: clientTopProducts,
+          mostConsumedCategory: mostConsumedCategory
       }
     }).sort((a,b) => b.totalSpent - a.totalSpent);
 
@@ -70,7 +77,7 @@ export function AnalyticsScreen() {
           <CardTitle>Overall Revenue</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-4xl font-bold text-primary">{formatCurrency(totalRevenue)}</p>
+          <p className="text-4xl font-bold text-primary">{formatValue(totalRevenue, isSensitiveDataVisible, formatCurrency)}</p>
           <p className="text-muted-foreground text-sm">
             Total from all clients.
           </p>
@@ -87,9 +94,9 @@ export function AnalyticsScreen() {
               <div key={product.name} className="flex justify-between items-center bg-secondary p-3 rounded-md">
                 <div>
                   <p className="font-semibold">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">{product.count} sold</p>
+                  <p className="text-sm text-muted-foreground">{formatValue(product.count, isSensitiveDataVisible, (val) => `${val} sold`)}</p>
                 </div>
-                <p className="font-bold text-primary">{formatCurrency(product.revenue)}</p>
+                <p className="font-bold text-primary">{formatValue(product.revenue, isSensitiveDataVisible, formatCurrency)}</p>
               </div>
             )) : <p className="text-muted-foreground text-center py-4">No data available.</p>}
            </div>
@@ -109,10 +116,17 @@ export function AnalyticsScreen() {
                   <AccordionTrigger>
                     <div className="flex justify-between w-full pr-4">
                         <span>{client.name}</span>
-                        <span className="text-primary font-bold">{formatCurrency(client.totalSpent)}</span>
+                        <span className="text-primary font-bold">{formatValue(client.totalSpent, isSensitiveDataVisible, formatCurrency)}</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
+                    {client.mostConsumedCategory && (
+                        <div className="mb-4 p-2 bg-muted rounded-md text-center text-sm">
+                            <p className="text-muted-foreground">
+                            Most consumed category: <Badge variant="outline">{client.mostConsumedCategory}</Badge>
+                            </p>
+                        </div>
+                    )}
                     <h4 className="font-semibold mb-2 text-md">Purchase History for {client.name}</h4>
                     <div className="space-y-4">
                     {client.topProducts.length > 0 ? client.topProducts.map((product) => (
@@ -120,14 +134,14 @@ export function AnalyticsScreen() {
                         <div className="flex justify-between items-center">
                           <div>
                             <p className="font-medium text-sm">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">{product.count} total sold</p>
+                            <p className="text-xs text-muted-foreground">{formatValue(product.count, isSensitiveDataVisible, (val) => `${val} total sold`)}</p>
                           </div>
-                          <p className="font-semibold text-primary/90">{formatCurrency(product.revenue)}</p>
+                          <p className="font-semibold text-primary/90">{formatValue(product.revenue, isSensitiveDataVisible, formatCurrency)}</p>
                         </div>
                         <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
                             {product.purchases.map((purchase, index) => (
                                 <li key={index} className="flex justify-between">
-                                    <span>{purchase.quantity}x on {format(new Date(purchase.date), 'MMM d, yyyy')}</span>
+                                    <span>{formatValue(purchase.quantity, isSensitiveDataVisible, (val) => `${val}x`)} on {format(new Date(purchase.date), 'MMM d, yyyy')}</span>
                                     <span>({purchase.paymentMethod})</span>
                                 </li>
                             ))}
