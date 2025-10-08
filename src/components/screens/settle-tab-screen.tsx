@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DollarSign } from "lucide-react";
+import { DollarSign, CreditCard, Banknote } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,16 +18,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import type { PaymentMethod } from "@/lib/types";
+import { useState } from "react";
 
 
 export function SettleTabScreen() {
   const { activeClient, handleSettleTab } = useAppContext();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
 
   if (!activeClient) {
     return <div className="text-center py-10">No client selected.</div>;
   }
 
-  const total = activeClient.currentTab.reduce((sum, item) => sum + item.price, 0);
+  const total = activeClient.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  const onSettle = () => {
+    if (paymentMethod) {
+      handleSettleTab(activeClient.id, paymentMethod);
+    }
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -41,8 +50,13 @@ export function SettleTabScreen() {
             <div className="space-y-2">
               {activeClient.currentTab.map(item => (
                 <div key={item.id} className="flex justify-between items-center text-sm p-2 rounded-md bg-secondary">
-                  <span>{item.name}</span>
-                  <span className="font-mono">{formatCurrency(item.price)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold bg-primary/10 text-primary rounded-full h-7 w-7 flex items-center justify-center text-xs">
+                      {item.quantity}x
+                    </span>
+                    <span>{item.name}</span>
+                  </div>
+                  <span className="font-mono">{formatCurrency(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
@@ -55,23 +69,33 @@ export function SettleTabScreen() {
           </div>
           <Separator />
            <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="lg" disabled={total === 0}>
-                <DollarSign className="mr-2 h-5 w-5" />
-                Confirm & Settle Tab
-              </Button>
+            <AlertDialogTrigger asChild disabled={total === 0}>
+                <Button size="lg">
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    Settle Tab
+                </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>Select Payment Method</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will settle the tab for {activeClient.name} for a total of {formatCurrency(total)}. This action cannot be undone.
+                  How is {activeClient.name} paying for the total of {formatCurrency(total)}?
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              <div className="grid grid-cols-2 gap-4 py-4">
+                  <Button variant={paymentMethod === 'Cash' ? 'default' : 'secondary'} className="h-20 flex-col gap-2" onClick={() => setPaymentMethod('Cash')}>
+                      <Banknote className="h-7 w-7"/>
+                      Cash
+                  </Button>
+                  <Button variant={paymentMethod === 'Card' ? 'default' : 'secondary'} className="h-20 flex-col gap-2" onClick={() => setPaymentMethod('Card')}>
+                      <CreditCard className="h-7 w-7"/>
+                      Card
+                  </Button>
+              </div>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleSettleTab(activeClient.id)}>
-                  Continue
+                <AlertDialogCancel onClick={() => setPaymentMethod(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onSettle} disabled={!paymentMethod}>
+                  Confirm & Settle
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

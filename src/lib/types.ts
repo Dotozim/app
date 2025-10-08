@@ -1,14 +1,23 @@
+export type PaymentMethod = 'Cash' | 'Card';
+
 export interface Item {
   id: string;
   name: string;
   price: number;
+  quantity: number;
+}
+
+export interface Purchase extends Item {
+  purchaseDate: string;
+  paymentMethod: PaymentMethod;
 }
 
 export interface Client {
   id: string;
   name: string;
   currentTab: Item[];
-  purchaseHistory: Item[];
+  purchaseHistory: Purchase[];
+  tabOpenedAt?: string;
 }
 
 export interface Product {

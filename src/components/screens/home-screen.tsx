@@ -1,38 +1,77 @@
 'use client';
 import { useAppContext } from "@/context/app-context";
 import { formatCurrency } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, PlusCircle } from "lucide-react";
+import { Users, FileText, PlusCircle, CreditCard, Banknote } from "lucide-react";
+import { useMemo } from "react";
 
 export function HomeScreen() {
   const { clients, navigateTo, setAddClientFormOpen } = useAppContext();
 
   const openTabsCount = clients.filter(c => c.currentTab.length > 0).length;
   const totalOnTabs = clients.reduce((total, client) => 
-    total + client.currentTab.reduce((tabTotal, item) => tabTotal + item.price, 0), 0);
-  const totalItemsOnTabs = clients.reduce((total, client) => total + client.currentTab.length, 0);
+    total + client.currentTab.reduce((tabTotal, item) => tabTotal + (item.price * item.quantity), 0), 0);
+
+  const { totalRevenue, cashRevenue, cardRevenue } = useMemo(() => {
+    let totalRevenue = 0;
+    let cashRevenue = 0;
+    let cardRevenue = 0;
+    clients.forEach(client => {
+      client.purchaseHistory.forEach(purchase => {
+        const purchaseTotal = purchase.price * purchase.quantity;
+        totalRevenue += purchaseTotal;
+        if(purchase.paymentMethod === 'Cash') {
+          cashRevenue += purchaseTotal;
+        } else if (purchase.paymentMethod === 'Card') {
+          cardRevenue += purchaseTotal;
+        }
+      });
+    });
+    return { totalRevenue, cashRevenue, cardRevenue };
+  }, [clients]);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Open Tabs Summary</CardTitle>
+          <CardTitle>Open Tabs</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-3xl font-bold text-primary">{openTabsCount}</p>
-              <p className="text-muted-foreground text-sm mt-1">Open</p>
+              <p className="text-muted-foreground text-sm mt-1">Active</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-primary">{formatCurrency(totalOnTabs)}</p>
-              <p className="text-muted-foreground text-sm mt-1">Total</p>
+              <p className="text-muted-foreground text-sm mt-1">Total Value</p>
             </div>
-            <div>
-              <p className="text-3xl font-bold text-primary">{totalItemsOnTabs}</p>
-              <p className="text-muted-foreground text-sm mt-1">Items</p>
-            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>Today's Revenue</CardTitle>
+            <CardDescription>Total: {formatCurrency(totalRevenue)}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 bg-secondary p-4 rounded-lg">
+                  <Banknote className="h-8 w-8 text-green-500" />
+                  <div>
+                    <p className="text-muted-foreground text-sm">Cash</p>
+                    <p className="text-xl font-bold">{formatCurrency(cashRevenue)}</p>
+                  </div>
+              </div>
+              <div className="flex items-center gap-3 bg-secondary p-4 rounded-lg">
+                  <CreditCard className="h-8 w-8 text-blue-500" />
+                  <div>
+                    <p className="text-muted-foreground text-sm">Card</p>
+                    <p className="text-xl font-bold">{formatCurrency(cardRevenue)}</p>
+                  </div>
+              </div>
           </div>
         </CardContent>
       </Card>

@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, DollarSign, Trash2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { format } from 'date-fns';
 
 export function ClientDetailScreen() {
   const { activeClient, navigateTo, handleRemoveItem } = useAppContext();
@@ -15,12 +16,17 @@ export function ClientDetailScreen() {
     return <div className="text-center py-10">No client selected.</div>;
   }
   
-  const total = activeClient.currentTab.reduce((sum, item) => sum + item.price, 0);
+  const total = activeClient.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <div className="h-full flex flex-col gap-4">
       <Card>
         <CardContent className="p-4">
+            {activeClient.tabOpenedAt && (
+                <p className="text-xs text-muted-foreground mb-2">
+                    Tab opened: {format(new Date(activeClient.tabOpenedAt), "MMM d, yyyy 'at' h:mm a")}
+                </p>
+            )}
           <div className="flex items-center justify-between">
             <span className="font-bold text-lg text-foreground">Total</span>
             <span className="font-bold text-2xl text-primary">
@@ -57,17 +63,27 @@ export function ClientDetailScreen() {
                 key={item.id}
                 className="flex justify-between items-center p-3 rounded-lg bg-secondary"
               >
-                <div className="flex-grow">
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatCurrency(item.price)}
-                  </p>
+                <div className="flex items-center gap-3 flex-grow">
+                    <span className="font-semibold bg-primary/10 text-primary rounded-full h-7 w-7 flex items-center justify-center text-xs">
+                        {item.quantity}x
+                    </span>
+                    <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {formatCurrency(item.price)} each
+                        </p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <p className="font-bold text-md">
+                        {formatCurrency(item.price * item.quantity)}
+                    </p>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleRemoveItem(activeClient.id, item.id)}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive ml-2"
                 >
                   <Trash2 className="h-5 w-5" />
                   <span className="sr-only">Remove item</span>

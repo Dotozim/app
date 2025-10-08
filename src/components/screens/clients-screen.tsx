@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import { EmptyState } from "../app/empty-state";
+import { format } from 'date-fns';
 
 export function ClientsScreen() {
   const { clients, navigateTo, setAddClientFormOpen } = useAppContext();
@@ -43,7 +44,7 @@ export function ClientsScreen() {
         <ScrollArea className="flex-grow">
           <div className="space-y-3 pr-1">
             {filteredClients.map(client => {
-              const tabTotal = client.currentTab.reduce((sum, item) => sum + item.price, 0);
+              const tabTotal = client.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
               return (
                 <Card 
                   key={client.id}
@@ -56,10 +57,10 @@ export function ClientsScreen() {
                       <div className="flex items-center gap-2 mt-1.5">
                         {tabTotal > 0 ? (
                           <>
-                            <span className="bg-accent/20 text-accent-foreground text-xs px-2 py-1 rounded-full font-medium">
+                            <span className="bg-accent/20 text-accent font-medium text-xs px-2 py-1 rounded-full">
                               Open Tab
                             </span>
-                            <span className="text-accent-foreground font-bold">
+                            <span className="text-accent font-bold">
                               {formatCurrency(tabTotal)}
                             </span>
                           </>
@@ -69,6 +70,11 @@ export function ClientsScreen() {
                           </span>
                         )}
                       </div>
+                      {client.tabOpenedAt && tabTotal > 0 && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                              Opened: {format(new Date(client.tabOpenedAt), "h:mm a")}
+                          </p>
+                      )}
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </CardContent>

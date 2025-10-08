@@ -9,7 +9,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import {
@@ -21,7 +20,6 @@ import {
 } from "@/components/ui/select"
 import { Plus, Trash2 } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
-import { Input } from '../ui/input';
 import { formatCurrency } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -98,21 +96,31 @@ export function AddItemForm() {
                         key={item.id}
                         className="flex justify-between items-center p-3 rounded-lg bg-secondary"
                         >
-                        <div className="flex-grow">
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                            {formatCurrency(item.price)}
+                          <div className="flex items-center gap-3 flex-grow">
+                            <span className="font-semibold bg-primary/10 text-primary rounded-full h-7 w-7 flex items-center justify-center text-xs">
+                                {item.quantity}x
+                            </span>
+                            <div>
+                              <p className="font-medium">{item.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {formatCurrency(item.price)} each
+                              </p>
+                            </div>
+                          </div>
+                          <div className='text-right'>
+                            <p className="font-bold text-md">
+                                {formatCurrency(item.price * item.quantity)}
                             </p>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => activeClient && handleRemoveItem(activeClient.id, item.id)}
-                            className="text-muted-foreground hover:text-destructive h-9 w-9"
-                        >
-                            <Trash2 className="h-5 w-5" />
-                            <span className="sr-only">Remove item</span>
-                        </Button>
+                          </div>
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => activeClient && handleRemoveItem(activeClient.id, item.id)}
+                              className="text-muted-foreground hover:text-destructive h-9 w-9 ml-2"
+                          >
+                              <Trash2 className="h-5 w-5" />
+                              <span className="sr-only">Remove item</span>
+                          </Button>
                         </div>
                     ))}
                     </div>
