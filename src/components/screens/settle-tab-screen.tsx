@@ -84,7 +84,6 @@ export function SettleTabScreen() {
           <div className="flex justify-between items-start">
             <div>
                 <CardTitle>Settle Tab</CardTitle>
-                <CardDescription>Settle the bill by adding one or more payments.</CardDescription>
             </div>
              <div className="flex items-center gap-2">
                 <Switch
