@@ -42,32 +42,13 @@ export function ClientTab({
   );
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="font-headline text-2xl">
-              {client.name}
-            </CardTitle>
-            <CardDescription>
-              Manage this client's current running tab.
-            </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSettleTab}
-            disabled={client.currentTab.length === 0}
-            className="text-accent-foreground bg-accent hover:bg-accent/90"
-          >
-            <DollarSign className="mr-2 h-4 w-4" />
-            Settle Tab
-          </Button>
-        </div>
+    <Card className="shadow-lg border-none">
+      <CardHeader className="p-0">
+          {/* The title is now in the main AppHeader */}
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 !pt-2">
         <div>
-          <h3 className="text-lg font-semibold mb-2 font-headline">
+          <h3 className="text-lg font-medium mb-3">
             Add to Tab
           </h3>
           <AddItemForm onItemAdded={onAddItem} />
@@ -76,7 +57,7 @@ export function ClientTab({
         <Separator />
 
         <div>
-          <h3 className="text-lg font-semibold mb-4 font-headline">
+          <h3 className="text-lg font-medium mb-2">
             Current Order
           </h3>
           {client.currentTab.length > 0 ? (
@@ -84,7 +65,7 @@ export function ClientTab({
               {client.currentTab.map((item) => (
                 <div
                   key={item.id}
-                  className="flex justify-between items-center p-2 rounded-md bg-background"
+                  className="flex justify-between items-center p-3 rounded-lg bg-secondary"
                 >
                   <div className="flex-grow">
                     <p className="font-medium">{item.name}</p>
@@ -96,42 +77,50 @@ export function ClientTab({
                     variant="ghost"
                     size="icon"
                     onClick={() => onRemoveItem(item.id)}
-                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 w-9"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-5 w-5" />
                     <span className="sr-only">Remove item</span>
                   </Button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4 bg-background rounded-md">
+            <p className="text-sm text-muted-foreground text-center py-6 bg-secondary rounded-lg">
               No items in the current tab.
             </p>
           )}
         </div>
-      </CardContent>
-      <CardFooter className="flex-col items-stretch gap-4">
-        <Separator />
-        <div className="flex justify-between items-center text-xl font-bold">
-          <span>Total</span>
-          <span className="text-primary">{formatCurrency(total)}</span>
+        
+        <div className="flex justify-end pt-2">
+           <Button
+            size="lg"
+            onClick={onSettleTab}
+            disabled={client.currentTab.length === 0}
+            className="bg-primary text-primary-foreground"
+          >
+            <DollarSign className="mr-2 h-5 w-5" />
+            Settle Tab ({formatCurrency(total)})
+          </Button>
         </div>
+
+      </CardContent>
+      <CardFooter className="flex-col items-stretch gap-4 p-0">
         {client.purchaseHistory.length > 0 && (
-          <Accordion type="single" collapsible>
-            <AccordionItem value="history">
-              <AccordionTrigger>
+           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="history" className="border-t">
+              <AccordionTrigger className="py-4">
                 <span className="flex items-center gap-2">
-                  <History className="h-4 w-4" /> Purchase History
+                  <History className="h-5 w-5" /> Purchase History
                 </span>
               </AccordionTrigger>
               <AccordionContent>
-                <ScrollArea className="h-40">
+                <ScrollArea className="h-48">
                   <div className="space-y-2 pr-4">
                     {client.purchaseHistory.map((item, index) => (
                       <div
                         key={`${item.id}-${index}`}
-                        className="flex justify-between items-center text-sm p-2"
+                        className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-secondary"
                       >
                         <span>{item.name}</span>
                         <span className="text-muted-foreground">

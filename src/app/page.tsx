@@ -6,8 +6,9 @@ import { AppHeader } from '@/components/app/app-header';
 import { AddClientForm } from '@/components/app/add-client-form';
 import { ClientTab } from '@/components/app/client-tab';
 import { EmptyState } from '@/components/app/empty-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { BottomNav } from '@/components/app/bottom-nav';
+import { ClientListSheet } from '@/components/app/client-list-sheet';
+import { AddItemForm } from '@/components/app/add-item-form';
 
 const initialClients: Client[] = [
   {
@@ -32,10 +33,12 @@ const initialClients: Client[] = [
 
 export default function Home() {
   const [clients, setClients] = useState<Client[]>(initialClients);
-  const [activeTab, setActiveTab] = useState<string | undefined>(
+  const [activeClientId, setActiveClientId] = useState<string | undefined>(
     initialClients[0]?.id
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [isClientSheetOpen, setClientSheetOpen] = useState(false);
+  const [isAddClientFormOpen, setAddClientFormOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -48,8 +51,9 @@ export default function Home() {
       currentTab: [],
       purchaseHistory: [],
     };
-    setClients((prev) => [...prev, newClient]);
-    setActiveTab(newClient.id);
+    const newClients = [...clients, newClient];
+    setClients(newClients);
+    setActiveClientId(newClient.id);
   };
 
   const handleAddItem = (clientId: string, item: Omit<Item, 'id'>) => {
@@ -86,6 +90,9 @@ export default function Home() {
         return c;
       })
     );
+    // Optional: Switch to another client or set to undefined
+    const newActiveClient = clients.find(c => c.id !== clientId);
+    setActiveClientId(newActiveClient?.id);
   };
 
   const sortedClients = useMemo(
@@ -93,52 +100,56 @@ export default function Home() {
     [clients]
   );
   
+  const activeClient = useMemo(() => clients.find(c => c.id === activeClientId), [clients, activeClientId]);
+
   if (!isMounted) {
-    return null; // Or a loading spinner
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col min-h-screen">
-      <AppHeader />
-      <main className="flex-grow p-4 md:p-6 lg:p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold font-headline text-foreground/90">
-            Client Tabs
-          </h1>
-          <AddClientForm onAddClient={handleAddClient} />
-        </div>
-
-        {sortedClients.length > 0 && activeTab ? (
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <ScrollArea className="w-full pb-2.5">
-              <TabsList>
-                {sortedClients.map((client) => (
-                  <TabsTrigger key={client.id} value={client.id}>
-                    {client.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-            {sortedClients.map((client) => (
-              <TabsContent key={client.id} value={client.id} className="mt-4">
-                <ClientTab
-                  client={client}
-                  onAddItem={(item) => handleAddItem(client.id, item)}
-                  onRemoveItem={(itemId) => handleRemoveItem(client.id, itemId)}
-                  onSettleTab={() => handleSettleTab(client.id)}
-                />
-              </TabsContent>
-            ))}
-          </Tabs>
+      <AppHeader clientName={activeClient?.name} />
+      <main className="flex-grow p-4 md:p-6 lg:p-8 pb-24">
+        {activeClient ? (
+           <ClientTab
+              client={activeClient}
+              onAddItem={(item) => handleAddItem(activeClient.id, item)}
+              onRemoveItem={(itemId) => handleRemoveItem(activeClient.id, itemId)}
+              onSettleTab={() => handleSettleTab(activeClient.id)}
+            />
         ) : (
-          <EmptyState />
+          <EmptyState onAddClient={() => setAddClientFormOpen(true)} />
         )}
       </main>
+
+      {clients.length > 0 && (
+        <BottomNav
+          onListClients={() => setClientSheetOpen(true)}
+          onAddClient={() => setAddClientFormOpen(true)}
+        />
+      )}
+      
+      <ClientListSheet
+        isOpen={isClientSheetOpen}
+        onOpenChange={setClientSheetOpen}
+        clients={sortedClients}
+        activeClientId={activeClientId}
+        onClientSelect={(id) => {
+          setActiveClientId(id);
+          setClientSheetOpen(false);
+        }}
+      />
+      
+      <AddClientForm
+        isOpen={isAddClientFormOpen}
+        onOpenChange={setAddClientFormOpen}
+        onAddClient={handleAddClient}
+      />
+
     </div>
   );
 }

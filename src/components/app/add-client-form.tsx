@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -23,7 +21,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { PlusCircle } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -32,12 +29,12 @@ const formSchema = z.object({
 });
 
 type AddClientFormProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
   onAddClient: (name: string) => void;
 };
 
-export function AddClientForm({ onAddClient }: AddClientFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
+export function AddClientForm({ isOpen, onOpenChange, onAddClient }: AddClientFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,17 +45,11 @@ export function AddClientForm({ onAddClient }: AddClientFormProps) {
   function onSubmit(values: z.infer<typeof formSchema>) {
     onAddClient(values.name);
     form.reset();
-    setIsOpen(false);
+    onOpenChange(false);
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2" />
-          New Client Tab
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Client Tab</DialogTitle>
@@ -67,7 +58,7 @@ export function AddClientForm({ onAddClient }: AddClientFormProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4">
             <FormField
               control={form.control}
               name="name"
@@ -82,6 +73,7 @@ export function AddClientForm({ onAddClient }: AddClientFormProps) {
               )}
             />
             <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit">Create Tab</Button>
             </DialogFooter>
           </form>
