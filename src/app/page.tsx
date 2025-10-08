@@ -12,7 +12,7 @@ import { SettleTabScreen } from '@/components/screens/settle-tab-screen';
 import { ProductsScreen } from '@/components/screens/products-screen';
 import { AddClientForm } from '@/components/app/add-client-form';
 
-export default function Home() {
+export default function Home({ appContext: AppContextFromProvider }: { appContext?: any }) {
   const { currentScreen } = useAppContext();
 
   const renderScreen = () => {

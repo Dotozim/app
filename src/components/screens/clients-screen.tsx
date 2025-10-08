@@ -90,11 +90,17 @@ export function ClientsScreen() {
           />
         </div>
 
-        {!searchTerm && (
-            <Button className="w-full" onClick={() => setAddClientFormOpen(true)}>
-                <Plus className="mr-2" /> New Client
+        {searchTerm && !exactMatchExists ? (
+          <div className="text-center py-2">
+            <Button variant="outline" onClick={handleCreateClientFromSearch} className="w-full">
+              <Plus className="mr-2" /> Create Client "{searchTerm}"
             </Button>
-        )}
+          </div>
+        ) : !searchTerm ? (
+          <Button className="w-full" onClick={() => setAddClientFormOpen(true)}>
+            <Plus className="mr-2" /> New Client
+          </Button>
+        ) : null}
       </div>
 
       {clients.length === 0 && !searchTerm ? (
@@ -102,13 +108,6 @@ export function ClientsScreen() {
       ) : (
         <ScrollArea className="flex-grow">
           <div className="space-y-3 pr-1">
-            {searchTerm && !exactMatchExists && (
-                <div className="text-center py-2">
-                    <Button variant="outline" onClick={handleCreateClientFromSearch} className="w-full">
-                        <Plus className="mr-2" /> Create Client "{searchTerm}"
-                    </Button>
-                </div>
-            )}
             {filteredClients.length > 0 ? (
                 filteredClients.map(client => {
                 const tabTotal = client.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);

@@ -407,14 +407,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setEditingClient,
     toggleSensitiveDataVisibility,
     toggleClientVisibility,
-    archivedClients, // Exposing archived clients for analytics
+    archivedClients,
   };
 
-  // This is a temporary fix to provide all clients to analytics
   if (currentScreen === 'analytics') {
     value.clients = clients;
   }
-
+  
   return (
     <AppContext.Provider value={value}>
         {children}
