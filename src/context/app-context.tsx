@@ -15,6 +15,7 @@ type AppContextType = {
   isAddClientFormOpen: boolean;
   isAddProductFormOpen: boolean;
   isSensitiveDataVisible: boolean;
+  clientVisibilities: Record<string, boolean>;
 
   // Actions
   handleAddItem: (clientId: string, item: Omit<Item, 'id' | 'quantity'>) => void;
@@ -35,6 +36,8 @@ type AppContextType = {
   setAddClientFormOpen: (isOpen: boolean) => void;
   setAddProductFormOpen: (isOpen: boolean) => void;
   toggleSensitiveDataVisibility: () => void;
+  toggleClientVisibility: (clientId: string) => void;
+  archivedClients: Client[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -101,6 +104,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isAddClientFormOpen, setAddClientFormOpen] = useState(false);
   const [isAddProductFormOpen, setAddProductFormOpen] = useState(false);
   const [isSensitiveDataVisible, setIsSensitiveDataVisible] = useState(true);
+  const [clientVisibilities, setClientVisibilities] = useState<Record<string, boolean>>({});
+
+  const toggleClientVisibility = (clientId: string) => {
+    setClientVisibilities(prev => ({
+        ...prev,
+        [clientId]: !(prev[clientId] ?? true)
+    }));
+  };
 
   const toggleSensitiveDataVisibility = () => {
     setIsSensitiveDataVisible(prev => !prev);
@@ -312,7 +323,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const archivedClients = useMemo(() => clients.filter(c => c.isArchived), [clients]);
 
 
-  const value = {
+  const value: AppContextType = {
     clients: activeClients,
     products,
     activeClient,
@@ -320,7 +331,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigationHistory,
     isAddClientFormOpen,
     isAddProductFormOpen,
-isSensitiveDataVisible,
+    isSensitiveDataVisible,
+    clientVisibilities,
     handleAddItem,
     handleRemoveItem,
     handleSettleTab,
@@ -335,6 +347,7 @@ isSensitiveDataVisible,
     setAddClientFormOpen,
     setAddProductFormOpen,
     toggleSensitiveDataVisibility,
+    toggleClientVisibility,
     archivedClients, // Exposing archived clients for analytics
   };
 
