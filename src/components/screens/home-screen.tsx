@@ -3,11 +3,11 @@ import { useAppContext } from "@/context/app-context";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, PlusCircle, CreditCard, Banknote, Landmark } from "lucide-react";
+import { Users, FileText, PlusCircle, CreditCard, Banknote, Landmark, Package } from "lucide-react";
 import { useMemo } from "react";
 
 export function HomeScreen() {
-  const { clients, navigateTo, setAddClientFormOpen, isSensitiveDataVisible } = useAppContext();
+  const { clients, navigateTo, setAddClientFormOpen, setAddProductFormOpen, isSensitiveDataVisible } = useAppContext();
 
   const openTabsCount = clients.filter(c => c.currentTab.length > 0).length;
   const totalOnTabs = clients.reduce((total, client) => 
@@ -19,16 +19,18 @@ export function HomeScreen() {
     let creditCardRevenue = 0;
     let debitCardRevenue = 0;
     clients.forEach(client => {
-      client.purchaseHistory.forEach(purchase => {
-        const purchaseTotal = purchase.price * purchase.quantity;
-        totalRevenue += purchaseTotal;
-        if(purchase.paymentMethod === 'Cash') {
-          cashRevenue += purchaseTotal;
-        } else if (purchase.paymentMethod === 'Credit Card') {
-          creditCardRevenue += purchaseTotal;
-        } else if (purchase.paymentMethod === 'Debit Card') {
-            debitCardRevenue += purchaseTotal;
-        }
+      client.tabHistory.forEach(session => {
+        session.items.forEach(purchase => {
+            const purchaseTotal = purchase.amountPaid;
+            totalRevenue += purchaseTotal;
+            if(purchase.paymentMethod === 'Cash') {
+              cashRevenue += purchaseTotal;
+            } else if (purchase.paymentMethod === 'Credit Card') {
+              creditCardRevenue += purchaseTotal;
+            } else if (purchase.paymentMethod === 'Debit Card') {
+                debitCardRevenue += purchaseTotal;
+            }
+        });
       });
     });
     return { totalRevenue, cashRevenue, creditCardRevenue, debitCardRevenue };
@@ -88,9 +90,12 @@ export function HomeScreen() {
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start" onClick={() => setAddClientFormOpen(true)}>
-            <PlusCircle className="mr-2" /> Create New Tab
+        <CardContent className="grid grid-cols-2 gap-3">
+          <Button variant="outline" className="justify-start h-12" onClick={() => setAddClientFormOpen(true)}>
+            <PlusCircle /> Create New Tab
+          </Button>
+          <Button variant="outline" className="justify-start h-12" onClick={() => setAddProductFormOpen(true)}>
+            <Package /> New Product
           </Button>
         </CardContent>
       </Card>

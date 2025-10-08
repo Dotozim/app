@@ -4,17 +4,23 @@ import { useAppContext } from "@/context/app-context";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { DollarSign, CreditCard, Banknote, Landmark, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { PaymentMethod, SplitPayment } from "@/lib/types";
 import { useState, useMemo } from "react";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+
+import { DollarSign, CreditCard, Banknote, Landmark, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+
+const paymentMethods: { name: PaymentMethod; icon: JSX.Element }[] = [
+    { name: 'Cash', icon: <Banknote /> },
+    { name: 'Credit Card', icon: <CreditCard /> },
+    { name: 'Debit Card', icon: <Landmark /> },
+  ];
 
 export function SettleTabScreen() {
   const { activeClient, handleSettleTab, isSensitiveDataVisible } = useAppContext();
@@ -47,6 +53,11 @@ export function SettleTabScreen() {
 
     setPayments(prev => [...prev, { method: currentPaymentMethod, amount }]);
     setCurrentPaymentAmount('');
+    // Set remaining balance as next payment amount
+    const newRemaining = remainingBalance - amount;
+    if (newRemaining > 0.01) {
+        setCurrentPaymentAmount(newRemaining.toFixed(2));
+    }
   };
   
   const handleRemovePayment = (index: number) => {
@@ -62,11 +73,8 @@ export function SettleTabScreen() {
   }
 
   const getPaymentMethodIcon = (method: PaymentMethod) => {
-      switch(method) {
-          case 'Cash': return <Banknote className="h-5 w-5" />;
-          case 'Credit Card': return <CreditCard className="h-5 w-5" />;
-          case 'Debit Card': return <Landmark className="h-5 w-5" />;
-      }
+      const pm = paymentMethods.find(p => p.name === method);
+      return pm ? React.cloneElement(pm.icon, { className: "h-5 w-5" }) : null;
   }
 
   return (
@@ -107,24 +115,27 @@ export function SettleTabScreen() {
 
           <div className="space-y-2">
             <Label>Add a Payment</Label>
+            <div className='grid grid-cols-3 gap-2 mb-2'>
+                {paymentMethods.map(pm => (
+                    <Button 
+                        key={pm.name}
+                        variant={currentPaymentMethod === pm.name ? "default" : "secondary"}
+                        onClick={() => setCurrentPaymentMethod(pm.name)}
+                        className='flex items-center justify-center gap-2'
+                    >
+                        {React.cloneElement(pm.icon, { className: "h-5 w-5" })}
+                        <span className="hidden sm:inline">{pm.name}</span>
+                    </Button>
+                ))}
+            </div>
             <div className="flex gap-2">
               <Input 
                 type="number"
                 placeholder="Amount"
                 value={currentPaymentAmount}
                 onChange={(e) => setCurrentPaymentAmount(e.target.value)}
-                className="w-28"
+                className="flex-grow"
               />
-              <Select value={currentPaymentMethod} onValueChange={(v) => setCurrentPaymentMethod(v as PaymentMethod)}>
-                <SelectTrigger className="flex-grow">
-                  <SelectValue placeholder="Method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Credit Card">Credit Card</SelectItem>
-                  <SelectItem value="Debit Card">Debit Card</SelectItem>
-                </SelectContent>
-              </Select>
               <Button onClick={handleAddPayment} disabled={remainingBalance <= 0}>
                 <Plus />
               </Button>

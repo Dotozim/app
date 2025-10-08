@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -44,8 +43,7 @@ const formSchema = z.object({
 });
 
 export function ProductsScreen() {
-  const { products, handleAddProduct, handleUpdateProduct, handleRemoveProduct } = useAppContext();
-  const [isOpen, setIsOpen] = useState(false);
+  const { products, handleAddProduct, handleUpdateProduct, handleRemoveProduct, isAddProductFormOpen, setAddProductFormOpen } = useAppContext();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -67,21 +65,21 @@ export function ProductsScreen() {
       } else {
         setImagePreview(null);
       }
-      setIsOpen(true);
+      setAddProductFormOpen(true);
     } else {
       form.reset({ name: '', category: '', price: 0, imageUrl: '' });
       setImagePreview(null);
     }
-  }, [editingProduct, form]);
+  }, [editingProduct, form, setAddProductFormOpen]);
 
   const handleOpenDialog = (product: Product | null) => {
     setEditingProduct(product);
-    setIsOpen(true);
+    setAddProductFormOpen(true);
   };
 
   const handleCloseDialog = () => {
     setEditingProduct(null);
-    setIsOpen(false);
+    setAddProductFormOpen(false);
     setImagePreview(null);
     form.reset();
   }
@@ -111,18 +109,16 @@ export function ProductsScreen() {
 
   return (
     <div className="flex flex-col h-full gap-4">
-      <Dialog open={isOpen} onOpenChange={(open) => {
+       <Button className="w-full" onClick={() => handleOpenDialog(null)}>
+            <Plus className="mr-2" /> New Product
+        </Button>
+      <Dialog open={isAddProductFormOpen} onOpenChange={(open) => {
         if (!open) {
             handleCloseDialog();
         } else {
-            setIsOpen(true);
+            setAddProductFormOpen(true);
         }
       }}>
-        <DialogTrigger asChild>
-          <Button className="w-full" onClick={() => handleOpenDialog(null)}>
-            <Plus className="mr-2" /> New Product
-          </Button>
-        </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>

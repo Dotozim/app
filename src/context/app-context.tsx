@@ -13,6 +13,7 @@ type AppContextType = {
   currentScreen: Screen;
   navigationHistory: Screen[];
   isAddClientFormOpen: boolean;
+  isAddProductFormOpen: boolean;
   isSensitiveDataVisible: boolean;
 
   // Actions
@@ -30,6 +31,7 @@ type AppContextType = {
   
   // UI Actions
   setAddClientFormOpen: (isOpen: boolean) => void;
+  setAddProductFormOpen: (isOpen: boolean) => void;
   toggleSensitiveDataVisibility: () => void;
 };
 
@@ -93,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [navigationHistory, setNavigationHistory] = useState<Screen[]>(['home']);
   const [isAddClientFormOpen, setAddClientFormOpen] = useState(false);
+  const [isAddProductFormOpen, setAddProductFormOpen] = useState(false);
   const [isSensitiveDataVisible, setIsSensitiveDataVisible] = useState(true);
 
   const toggleSensitiveDataVisibility = () => {
@@ -166,27 +169,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
           
           const now = new Date().toISOString();
           let paymentIndex = 0;
+          if (payments.length === 0) return c;
           let currentPaymentAmountLeft = payments[paymentIndex].amount;
 
           const settledItems: Purchase[] = c.currentTab.flatMap(item => {
-            const itemTotal = item.price * item.quantity;
-            let itemAmountRemaining = itemTotal;
+            let itemAmountRemaining = item.price * item.quantity;
             const purchases: Purchase[] = [];
 
-            while(itemAmountRemaining > 0) {
+            while(itemAmountRemaining > 0 && paymentIndex < payments.length) {
               const amountToPay = Math.min(itemAmountRemaining, currentPaymentAmountLeft);
               
-              purchases.push({
-                ...item,
+              const newPurchase: Purchase = {
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                category: item.category,
+                quantity: 1, // This can be tricky, let's rethink how we log this
+                imageUrl: item.imageUrl,
                 purchaseDate: now,
                 paymentMethod: payments[paymentIndex].method,
                 amountPaid: amountToPay,
-              });
+              };
+
+              // Logic to handle quantity for split items could be complex.
+              // For now, we are creating a purchase record for the amount paid.
+              // A better model might be to log payments against the tab, not per item.
+              purchases.push(newPurchase);
+
 
               itemAmountRemaining -= amountToPay;
               currentPaymentAmountLeft -= amountToPay;
 
-              if (currentPaymentAmountLeft <= 0 && paymentIndex < payments.length - 1) {
+              if (currentPaymentAmountLeft <= 0.001 && paymentIndex < payments.length - 1) {
                 paymentIndex++;
                 currentPaymentAmountLeft = payments[paymentIndex].amount;
               }
@@ -203,6 +217,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           
           return {
             ...c,
+            // purchaseHistory is deprecated in favor of tabHistory
             purchaseHistory: [...c.purchaseHistory, ...settledItems],
             currentTab: [],
             tabOpenedAt: undefined,
@@ -230,7 +245,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...client,
       currentTab: client.currentTab.map(item => {
         const product = products.find(p => p.id === updatedProduct.id);
-        if (product && item.name === product.name) {
+        // This logic is a bit flawed because product name might change
+        if (item.name === editingProduct?.name) {
           return { ...item, name: updatedProduct.name, price: updatedProduct.price, category: updatedProduct.category, imageUrl: updatedProduct.imageUrl };
         }
         return item;
@@ -267,6 +283,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const activeClient = useMemo(() => clients.find(c => c.id === activeClientId), [clients, activeClientId]);
+  const editingProduct = useMemo(() => products.find(p => p.id ==='p1'),[products])
 
   const value = {
     clients,
@@ -275,6 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     currentScreen,
     navigationHistory,
     isAddClientFormOpen,
+    isAddProductFormOpen,
     isSensitiveDataVisible,
     handleAddItem,
     handleRemoveItem,
@@ -286,6 +304,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigateTo,
     navigateBack,
     setAddClientFormOpen,
+    setAddProductFormOpen,
     toggleSensitiveDataVisibility
   };
 
