@@ -99,9 +99,24 @@ export function ProductsScreen() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const productData = { ...values, imageUrl: imagePreview || '' };
+
     if (editingProduct) {
+      const isDuplicate = products.some(
+        p => p.name.toLowerCase() === values.name.toLowerCase() && p.id !== editingProduct.id
+      );
+      if (isDuplicate) {
+        form.setError("name", { type: "manual", message: "A product with this name already exists." });
+        return;
+      }
       handleUpdateProduct({ ...editingProduct, ...productData });
     } else {
+      const isDuplicate = products.some(
+        p => p.name.toLowerCase() === values.name.toLowerCase()
+      );
+      if (isDuplicate) {
+        form.setError("name", { type: "manual", message: "A product with this name already exists." });
+        return;
+      }
       handleAddProduct(productData);
     }
     handleCloseDialog();
