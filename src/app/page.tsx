@@ -9,9 +9,10 @@ import { AnalyticsScreen } from '@/components/screens/analytics-screen';
 import { ClientDetailScreen } from '@/components/screens/client-detail-screen';
 import { AddItemsScreen } from '@/components/screens/add-items-screen';
 import { SettleTabScreen } from '@/components/screens/settle-tab-screen';
+import { ProductsScreen } from '@/components/screens/products-screen';
 
 export default function Home() {
-  const { currentScreen, activeClient } = useAppContext();
+  const { currentScreen } = useAppContext();
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -25,6 +26,8 @@ export default function Home() {
         return <SettleTabScreen />;
       case 'analytics':
         return <AnalyticsScreen />;
+      case 'products':
+        return <ProductsScreen />;
       case 'home':
       default:
         return <HomeScreen />;

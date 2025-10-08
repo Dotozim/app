@@ -10,3 +10,9 @@ export interface Client {
   currentTab: Item[];
   purchaseHistory: Item[];
 }
+
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+}

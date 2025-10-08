@@ -1,13 +1,14 @@
 'use client';
 import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
-import type { Client, Item } from '@/lib/types';
+import type { Client, Item, Product } from '@/lib/types';
 import { AddClientForm } from '@/components/app/add-client-form';
 
-export type Screen = 'home' | 'clients' | 'client-detail' | 'add-items' | 'settle-tab' | 'analytics';
+export type Screen = 'home' | 'clients' | 'client-detail' | 'add-items' | 'settle-tab' | 'analytics' | 'products';
 
 type AppContextType = {
   // State
   clients: Client[];
+  products: Product[];
   activeClient: Client | undefined;
   currentScreen: Screen;
   navigationHistory: Screen[];
@@ -18,6 +19,8 @@ type AppContextType = {
   handleRemoveItem: (clientId: string, itemId: string) => void;
   handleSettleTab: (clientId: string) => void;
   handleAddClient: (name: string) => void;
+  handleAddProduct: (product: Omit<Product, 'id'>) => void;
+  handleRemoveProduct: (productId: string) => void;
   
   // Navigation
   navigateTo: (screen: Screen, clientId?: string) => void;
@@ -50,9 +53,18 @@ const initialClients: Client[] = [
   },
 ];
 
+const initialProducts: Product[] = [
+    { id: 'p1', name: 'Craft IPA', price: 7.5 },
+    { id: 'p2', name: 'Pretzel Bites', price: 5.0 },
+    { id: 'p3', name: 'Stout', price: 8.0 },
+    { id: 'p4', name: 'Lager', price: 6.0 },
+    { id: 'p5', name: 'Chicken Wings', price: 12.0 },
+];
+
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [clients, setClients] = useState<Client[]>(initialClients);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [navigationHistory, setNavigationHistory] = useState<Screen[]>(['home']);
@@ -107,9 +119,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigateTo('clients');
   };
 
+  const handleAddProduct = (product: Omit<Product, 'id'>) => {
+    const newProduct = { ...product, id: crypto.randomUUID() };
+    setProducts(prev => [...prev, newProduct]);
+  };
+
+  const handleRemoveProduct = (productId: string) => {
+    setProducts(prev => prev.filter(p => p.id !== productId));
+  };
+
   const navigateTo = (screen: Screen, clientId?: string) => {
     if (clientId) {
       setActiveClientId(clientId);
+    }
+    // If we're not navigating to a detail screen, clear the active client
+    if (screen === 'clients' || screen === 'home' || screen === 'products') {
+        setActiveClientId(null);
     }
     setNavigationHistory(prev => [...prev, screen]);
     setCurrentScreen(screen);
@@ -120,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     history.pop();
     const prevScreen = history[history.length - 1] || 'home';
 
-    if(prevScreen === 'clients' || prevScreen === 'home' || prevScreen === 'analytics') {
+    if(prevScreen === 'clients' || prevScreen === 'home' || prevScreen === 'analytics' || prevScreen === 'products') {
         setActiveClientId(null);
     }
     
@@ -132,6 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = {
     clients,
+    products,
     activeClient,
     currentScreen,
     navigationHistory,
@@ -140,6 +166,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleRemoveItem,
     handleSettleTab,
     handleAddClient,
+    handleAddProduct,
+    handleRemoveProduct,
     navigateTo,
     navigateBack,
     setAddClientFormOpen

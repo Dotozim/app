@@ -1,85 +1,128 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { addItemToTabWithAIPriceLookup } from '@/ai/flows/add-item-to-tab-with-ai-price-lookup';
-import type { Item } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Plus, Trash2 } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
+import { Input } from '../ui/input';
+import { formatCurrency } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
 
 const formSchema = z.object({
-  itemName: z.string().min(1, 'Item name cannot be empty.'),
+  productId: z.string().min(1, 'Please select a product.'),
 });
 
 
 export function AddItemForm() {
-  const { activeClient, handleAddItem } = useAppContext();
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { activeClient, products, handleAddItem, handleRemoveItem } = useAppContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      itemName: '',
+      productId: '',
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!activeClient) return;
-
-    setIsLoading(true);
-    try {
-      const result = await addItemToTabWithAIPriceLookup({
-        itemName: values.itemName,
-      });
-      if (result) {
-        handleAddItem(activeClient.id, result);
+    const product = products.find(p => p.id === values.productId);
+    if(product) {
+        handleAddItem(activeClient.id, { name: product.name, price: product.price });
         form.reset();
-      }
-    } catch (error) {
-      console.error('Error adding item with AI:', error);
-      toast({
-        title: 'Error',
-        description:
-          'Could not fetch price for the item. Please check the item name or try again later.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
     }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
-        <FormField
-          control={form.control}
-          name="itemName"
-          render={({ field }) => (
-            <FormItem className="flex-grow">
-              <FormControl>
-                <Input placeholder="e.g., Beer, Snacks" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" disabled={isLoading} className="w-28">
-          {isLoading ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2" /> Add</>}
-        </Button>
-      </form>
-    </Form>
+     <div className="flex flex-col h-full gap-4">
+        <div>
+            <h3 className="text-lg font-medium mb-3">Add to Tab</h3>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-start gap-2">
+                    <FormField
+                    control={form.control}
+                    name="productId"
+                    render={({ field }) => (
+                        <FormItem className='flex-grow'>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a product" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {products.map(product => (
+                                <SelectItem key={product.id} value={product.id}>
+                                    <div className='flex justify-between w-full'>
+                                        <span>{product.name}</span>
+                                        <span className='text-muted-foreground'>{formatCurrency(product.price)}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <Button type="submit">
+                        <Plus />
+                    </Button>
+                </form>
+            </Form>
+        </div>
+
+        <div className="flex-grow flex flex-col gap-2">
+            <h3 className="text-lg font-medium">Current Items</h3>
+                {activeClient && activeClient.currentTab.length > 0 ? (
+                <ScrollArea className="flex-grow pr-1">
+                    <div className="space-y-2">
+                    {activeClient.currentTab.map((item) => (
+                        <div
+                        key={item.id}
+                        className="flex justify-between items-center p-3 rounded-lg bg-secondary"
+                        >
+                        <div className="flex-grow">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                            {formatCurrency(item.price)}
+                            </p>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => activeClient && handleRemoveItem(activeClient.id, item.id)}
+                            className="text-muted-foreground hover:text-destructive h-9 w-9"
+                        >
+                            <Trash2 className="h-5 w-5" />
+                            <span className="sr-only">Remove item</span>
+                        </Button>
+                        </div>
+                    ))}
+                    </div>
+                </ScrollArea>
+            ) : (
+                <div className="text-sm text-muted-foreground text-center py-6 bg-secondary rounded-lg flex-grow flex items-center justify-center">
+                    <p>No items added yet.</p>
+                </div>
+            )}
+        </div>
+    </div>
   );
 }

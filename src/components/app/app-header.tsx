@@ -10,13 +10,27 @@ const screenTitles: Record<string, string> = {
   'add-items': 'Add Items',
   'settle-tab': 'Settle Tab',
   analytics: 'Analytics',
+  products: 'Products',
 };
 
 export function AppHeader() {
   const { currentScreen, activeClient, navigateBack } = useAppContext();
 
-  const canGoBack = currentScreen === 'client-detail' || currentScreen === 'add-items' || currentScreen === 'settle-tab';
-  const title = canGoBack && activeClient ? activeClient.name : screenTitles[currentScreen] || 'TabMaster';
+  const canGoBack = currentScreen === 'client-detail' || currentScreen === 'add-items' || currentScreen === 'settle-tab' || currentScreen === 'analytics';
+  
+  const getTitle = () => {
+    if (canGoBack) {
+      if(activeClient && (currentScreen === 'client-detail' || currentScreen === 'add-items' || currentScreen === 'settle-tab')) {
+        return activeClient.name;
+      }
+       if (currentScreen === 'analytics') {
+        return 'Analytics';
+      }
+    }
+    return screenTitles[currentScreen] || 'TabMaster';
+  }
+  
+  const title = getTitle();
 
   return (
     <header className="flex items-center gap-4 px-4 py-3 border-b bg-background sticky top-0 z-10 h-16">

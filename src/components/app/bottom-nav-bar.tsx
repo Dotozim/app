@@ -1,5 +1,5 @@
 'use client';
-import { Home, Users, TrendingUp } from 'lucide-react';
+import { Home, Users, TrendingUp, Beer } from 'lucide-react';
 import { useAppContext, Screen } from '@/context/app-context';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +36,7 @@ export function BottomNavBar() {
       <div className="max-w-md mx-auto h-full flex items-center justify-around">
         <NavItem screen="home" icon={<Home />} label="Home" />
         <NavItem screen="clients" icon={<Users />} label="Clients" />
+        <NavItem screen="products" icon={<Beer />} label="Products" />
         <NavItem screen="analytics" icon={<TrendingUp />} label="Analytics" />
       </div>
     </nav>
