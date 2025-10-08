@@ -1,16 +1,16 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAppContext } from "@/context/app-context";
 import { formatCurrency, formatValue } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import { EmptyState } from "../app/empty-state";
 import { formatDistanceToNow } from 'date-fns';
+import { AutocompleteInput } from "../ui/autocomplete-input";
 
 export function ClientsScreen() {
   const { clients, navigateTo, setAddClientFormOpen, clientVisibilities, toggleClientVisibility, handleAddClient } = useAppContext();
@@ -27,8 +27,13 @@ export function ClientsScreen() {
   }, []);
 
   const handleCreateClientFromSearch = () => {
-    handleAddClient(searchTerm);
+    if (searchTerm) {
+      handleAddClient(searchTerm);
+      setSearchTerm('');
+    }
   }
+
+  const clientNameSuggestions = useMemo(() => clients.map(c => c.name), [clients]);
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -38,22 +43,24 @@ export function ClientsScreen() {
     <div className="flex flex-col h-full">
       <div className="space-y-4 mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input 
-            type="text" 
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+          <AutocompleteInput 
+            suggestions={clientNameSuggestions}
+            value={searchTerm}
+            onChange={setSearchTerm}
             placeholder="Search clients..." 
             className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <Button className="w-full" onClick={() => setAddClientFormOpen(true)}>
-          <Plus className="mr-2" /> New Client
-        </Button>
+        {!searchTerm && (
+            <Button className="w-full" onClick={() => setAddClientFormOpen(true)}>
+                <Plus className="mr-2" /> New Client
+            </Button>
+        )}
       </div>
 
-      {clients.length === 0 ? (
+      {clients.length === 0 && !searchTerm ? (
         <EmptyState />
       ) : (
         <ScrollArea className="flex-grow">
