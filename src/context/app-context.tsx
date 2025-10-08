@@ -21,6 +21,7 @@ type AppContextType = {
   handleRemoveItem: (clientId: string, itemId: string) => void;
   handleSettleTab: (clientId: string, payments: SplitPayment[]) => void;
   handleAddClient: (name: string) => void;
+  handleRemoveClient: (clientId: string) => void;
   handleAddProduct: (product: Omit<Product, 'id'>) => void;
   handleUpdateProduct: (product: Product) => void;
   handleRemoveProduct: (productId: string) => void;
@@ -64,7 +65,8 @@ const initialClients: Client[] = [
             { id: 'c3', name: 'Stout', category: 'Beer', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', amountPaid: 8.0, imageUrl: 'https://picsum.photos/seed/p3/400/400' }
           ]
         }
-    ]
+    ],
+    isArchived: false,
   },
   {
     id: '2',
@@ -83,6 +85,7 @@ const initialClients: Client[] = [
         ]
       }
     ],
+    isArchived: false,
   },
 ];
 
@@ -109,10 +112,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       currentTab: [],
       purchaseHistory: [],
       tabHistory: [],
+      isArchived: false,
     };
     const newClients = [...clients, newClient];
     setClients(newClients);
     navigateTo('client-detail', newClient.id);
+  };
+  
+  const handleRemoveClient = (clientId: string) => {
+    setClients(prev => prev.filter(c => c.id !== clientId));
+    navigateTo('analytics');
+    toast({
+        title: "Client Removed",
+        description: "The client and their history have been deleted.",
+    })
   };
 
   const handleAddItem = (clientId: string, product: Omit<Item, 'id' | 'quantity'>) => {
@@ -184,18 +197,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 name: item.name,
                 price: item.price,
                 category: item.category,
-                quantity: 1, // This can be tricky, let's rethink how we log this
+                quantity: 1, 
                 imageUrl: item.imageUrl,
                 purchaseDate: now,
                 paymentMethod: payments[paymentIndex].method,
                 amountPaid: amountToPay,
               };
 
-              // Logic to handle quantity for split items could be complex.
-              // For now, we are creating a purchase record for the amount paid.
-              // A better model might be to log payments against the tab, not per item.
               purchases.push(newPurchase);
-
 
               itemAmountRemaining -= amountToPay;
               currentPaymentAmountLeft -= amountToPay;
@@ -217,11 +226,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           
           return {
             ...c,
-            // purchaseHistory is deprecated in favor of tabHistory
             purchaseHistory: [...c.purchaseHistory, ...settledItems],
             currentTab: [],
             tabOpenedAt: undefined,
             tabHistory: [...c.tabHistory, newTabSession],
+            isArchived: true,
           };
         }
         return c;
@@ -240,13 +249,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const handleUpdateProduct = (updatedProduct: Product) => {
+    const oldProduct = products.find(p => p.id === updatedProduct.id);
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
     setClients(prevClients => prevClients.map(client => ({
       ...client,
       currentTab: client.currentTab.map(item => {
-        const product = products.find(p => p.id === updatedProduct.id);
-        // This logic is a bit flawed because product name might change
-        if (item.name === editingProduct?.name) {
+        if (item.name === oldProduct?.name) {
           return { ...item, name: updatedProduct.name, price: updatedProduct.price, category: updatedProduct.category, imageUrl: updatedProduct.imageUrl };
         }
         return item;
@@ -283,10 +291,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const activeClient = useMemo(() => clients.find(c => c.id === activeClientId), [clients, activeClientId]);
-  const editingProduct = useMemo(() => products.find(p => p.id ==='p1'),[products])
+  const activeClients = useMemo(() => clients.filter(c => !c.isArchived), [clients]);
+  const archivedClients = useMemo(() => clients.filter(c => c.isArchived), [clients]);
+
 
   const value = {
-    clients,
+    clients: activeClients,
     products,
     activeClient,
     currentScreen,
@@ -298,6 +308,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleRemoveItem,
     handleSettleTab,
     handleAddClient,
+    handleRemoveClient,
     handleAddProduct,
     handleUpdateProduct,
     handleRemoveProduct,
@@ -305,8 +316,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigateBack,
     setAddClientFormOpen,
     setAddProductFormOpen,
-    toggleSensitiveDataVisibility
+    toggleSensitiveDataVisibility,
+    archivedClients, // Exposing archived clients for analytics
   };
+
+  // This is a temporary fix to provide all clients to analytics
+  if (currentScreen === 'analytics') {
+    value.clients = clients;
+  }
 
   return (
     <AppContext.Provider value={value}>

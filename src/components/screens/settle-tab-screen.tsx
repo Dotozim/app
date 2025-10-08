@@ -13,7 +13,6 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 
 import { DollarSign, CreditCard, Banknote, Landmark, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 
@@ -116,16 +115,16 @@ export function SettleTabScreen() {
 
           <div className="space-y-2">
             <Label>Add a Payment</Label>
-            <div className='grid grid-cols-3 gap-2 mb-2'>
+            <div className='flex flex-col gap-2 mb-2'>
                 {paymentMethods.map(pm => (
                     <Button 
                         key={pm.name}
                         variant={currentPaymentMethod === pm.name ? "default" : "secondary"}
                         onClick={() => setCurrentPaymentMethod(pm.name)}
-                        className='flex items-center justify-center gap-2'
+                        className='flex items-center justify-start gap-2 h-12'
                     >
                         {React.cloneElement(pm.icon, { className: "h-5 w-5" })}
-                        <span className="hidden sm:inline">{pm.name}</span>
+                        <span>{pm.name}</span>
                     </Button>
                 ))}
             </div>

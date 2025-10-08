@@ -7,6 +7,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
 import { Purchase } from "@/lib/types";
+import { Button } from "../ui/button";
+import { Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 
 const formatDuration = (milliseconds: number) => {
   if (milliseconds < 0) return '0m';
@@ -21,7 +25,7 @@ const formatDuration = (milliseconds: number) => {
 };
 
 export function AnalyticsScreen() {
-  const { clients, isSensitiveDataVisible } = useAppContext();
+  const { clients, isSensitiveDataVisible, handleRemoveClient } = useAppContext();
 
   const { totalRevenue, clientAnalytics } = useMemo(() => {
     let totalRevenue = 0;
@@ -70,6 +74,7 @@ export function AnalyticsScreen() {
           medianSeatedTime: medianSeatedTime,
           mostConsumedCategory: mostConsumedCategory,
           tabHistory: enrichedTabHistory,
+          isArchived: client.isArchived,
       }
     }).sort((a,b) => b.totalSpent - a.totalSpent);
       
@@ -102,27 +107,50 @@ export function AnalyticsScreen() {
               {clientAnalytics.map(client => (
                 <AccordionItem value={client.id} key={client.id}>
                   <AccordionTrigger>
-                    <div className="flex justify-between w-full pr-4">
+                    <div className="flex justify-between items-center w-full pr-4">
                         <span>{client.name}</span>
                         <span className="text-primary font-bold">{formatValue(client.totalSpent, isSensitiveDataVisible, formatCurrency)}</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="flex gap-2 mb-4">
-                        {client.mostConsumedCategory && (
-                            <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
-                                <p className="text-muted-foreground">
-                                Favorite Category: <Badge variant="outline">{client.mostConsumedCategory}</Badge>
-                                </p>
-                            </div>
-                        )}
-                        {client.medianSeatedTime > 0 && (
-                            <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
-                                <p className="text-muted-foreground">
-                                Median Seated Time: <Badge variant="outline">{formatDuration(client.medianSeatedTime)}</Badge>
-                                </p>
-                            </div>
-                        )}
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-2 mb-4">
+                          {client.mostConsumedCategory && (
+                              <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
+                                  <p className="text-muted-foreground">
+                                  Favorite Category: <Badge variant="outline">{client.mostConsumedCategory}</Badge>
+                                  </p>
+                              </div>
+                          )}
+                          {client.medianSeatedTime > 0 && (
+                              <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
+                                  <p className="text-muted-foreground">
+                                  Median Seated Time: <Badge variant="outline">{formatDuration(client.medianSeatedTime)}</Badge>
+                                  </p>
+                              </div>
+                          )}
+                      </div>
+                       {client.isArchived && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                                <Trash2 className="h-5 w-5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This will permanently delete {client.name} and all their history. This action cannot be undone.
+                                  </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleRemoveClient(client.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                     
                     <div className="space-y-4">

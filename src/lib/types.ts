@@ -29,6 +29,7 @@ export interface Client {
   purchaseHistory: Purchase[]; // Kept for simplicity, but new data goes into TabSession
   tabOpenedAt?: string;
   tabHistory: TabSession[];
+  isArchived: boolean;
 }
 
 export interface Product {

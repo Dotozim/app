@@ -3,11 +3,11 @@ import { useAppContext } from "@/context/app-context";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, PlusCircle, CreditCard, Banknote, Landmark, Package } from "lucide-react";
+import { PlusCircle, Package, Banknote, CreditCard, Landmark } from "lucide-react";
 import { useMemo } from "react";
 
 export function HomeScreen() {
-  const { clients, navigateTo, setAddClientFormOpen, setAddProductFormOpen, isSensitiveDataVisible } = useAppContext();
+  const { clients, setAddClientFormOpen, setAddProductFormOpen, isSensitiveDataVisible } = useAppContext();
 
   const openTabsCount = clients.filter(c => c.currentTab.length > 0).length;
   const totalOnTabs = clients.reduce((total, client) => 
@@ -90,7 +90,7 @@ export function HomeScreen() {
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3">
+        <CardContent className="flex flex-col gap-3">
           <Button variant="outline" className="justify-start h-12" onClick={() => setAddClientFormOpen(true)}>
             <PlusCircle /> Create New Tab
           </Button>
