@@ -37,7 +37,7 @@ export function AnalyticsScreen() {
       const allPurchases = client.tabHistory.flatMap(session => session.items);
 
       allPurchases.forEach(item => {
-        const itemTotal = item.price * item.quantity;
+        const itemTotal = item.amountPaid;
         totalRevenue += itemTotal;
         clientTotal += itemTotal;
         
@@ -117,16 +117,16 @@ export function AnalyticsScreen() {
                       <div className="flex gap-2 mb-4">
                           {client.mostConsumedCategory && (
                               <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
-                                  <p className="text-muted-foreground">
+                                  <div className="text-muted-foreground">
                                   Favorite Category: <Badge variant="outline">{client.mostConsumedCategory}</Badge>
-                                  </p>
+                                  </div>
                               </div>
                           )}
                           {client.medianSeatedTime > 0 && (
                               <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
-                                  <p className="text-muted-foreground">
+                                  <div className="text-muted-foreground">
                                   Median Seated Time: <Badge variant="outline">{formatDuration(client.medianSeatedTime)}</Badge>
-                                  </p>
+                                  </div>
                               </div>
                           )}
                       </div>
