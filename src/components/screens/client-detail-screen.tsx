@@ -55,6 +55,7 @@ export function ClientDetailScreen() {
           <div className="space-y-2 pr-1">
             {activeClient.currentTab.map((item) => {
               const product = products.find(p => p.name === item.name);
+              const subtotal = item.price * item.quantity;
               return (
               <div
                 key={item.id}
@@ -89,6 +90,9 @@ export function ClientDetailScreen() {
                     >
                         <Plus className="h-4 w-4" />
                     </Button>
+                </div>
+                <div className="w-20 text-right font-medium">
+                  {formatValue(subtotal, isSensitiveDataVisible, formatCurrency)}
                 </div>
               </div>
             )})}
