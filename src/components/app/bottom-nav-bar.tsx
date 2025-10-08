@@ -32,7 +32,7 @@ export function BottomNavBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-[80px] bg-background/80 backdrop-blur-xl border-t z-20">
+    <nav className="absolute bottom-0 left-0 right-0 h-[80px] bg-background/80 backdrop-blur-xl border-t z-20">
       <div className="max-w-md mx-auto h-full flex items-center justify-around">
         <NavItem screen="home" icon={<Home />} label="Home" />
         <NavItem screen="clients" icon={<Users />} label="Clients" />

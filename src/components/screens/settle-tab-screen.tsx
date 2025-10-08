@@ -99,7 +99,7 @@ export function SettleTabScreen() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-grow space-y-4">
+        <CardContent className="flex-grow space-y-4 flex flex-col">
           <Card className="bg-secondary">
             <CardContent className="p-4 space-y-2">
               <div className="flex justify-between items-center text-md font-medium">
@@ -142,10 +142,10 @@ export function SettleTabScreen() {
             </div>
           </div>
           
-          {payments.length > 0 && (
-            <div className="space-y-2">
-              <Label>Payments Added</Label>
-              <ScrollArea className="h-24 pr-2">
+          
+          <div className="space-y-2 flex-grow min-h-0">
+              {payments.length > 0 && <Label>Payments Added</Label>}
+              <ScrollArea className="h-full pr-2">
                 <div className="space-y-2">
                   {payments.map((p, index) => (
                     <div key={index} className="flex justify-between items-center text-sm p-2 rounded-md bg-secondary">
@@ -164,7 +164,7 @@ export function SettleTabScreen() {
                 </div>
               </ScrollArea>
             </div>
-          )}
+          
 
         </CardContent>
         <CardFooter className="flex-col items-stretch gap-4 p-4 border-t mt-auto">
