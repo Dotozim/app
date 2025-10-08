@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -12,7 +13,7 @@ import { EmptyState } from "../app/empty-state";
 import { formatDistanceToNow } from 'date-fns';
 
 export function ClientsScreen() {
-  const { clients, navigateTo, setAddClientFormOpen, clientVisibilities, toggleClientVisibility } = useAppContext();
+  const { clients, navigateTo, setAddClientFormOpen, clientVisibilities, toggleClientVisibility, handleAddClient } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   
   // State to force re-renders for the duration updates
@@ -24,6 +25,10 @@ export function ClientsScreen() {
     }, 60000); // Update every minute
     return () => clearInterval(interval);
   }, []);
+
+  const handleCreateClientFromSearch = () => {
+    handleAddClient(searchTerm);
+  }
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -53,52 +58,61 @@ export function ClientsScreen() {
       ) : (
         <ScrollArea className="flex-grow">
           <div className="space-y-3 pr-1">
-            {filteredClients.map(client => {
-              const tabTotal = client.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-              const isVisible = clientVisibilities[client.id] ?? true;
+            {filteredClients.length > 0 ? (
+                filteredClients.map(client => {
+                const tabTotal = client.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const isVisible = clientVisibilities[client.id] ?? true;
 
-              return (
-                <Card 
-                  key={client.id}
-                  onClick={() => navigateTo('client-detail', client.id)}
-                  className="cursor-pointer hover:bg-secondary transition-colors"
-                >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{client.name}</h3>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        {tabTotal > 0 ? (
-                          <>
-                            <span className="bg-accent/20 text-accent font-medium text-xs px-2 py-1 rounded-full">
-                              Open Tab
+                return (
+                    <Card 
+                    key={client.id}
+                    onClick={() => navigateTo('client-detail', client.id)}
+                    className="cursor-pointer hover:bg-secondary transition-colors"
+                    >
+                    <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{client.name}</h3>
+                        <div className="flex items-center gap-2 mt-1.5">
+                            {tabTotal > 0 ? (
+                            <>
+                                <span className="bg-accent/20 text-accent font-medium text-xs px-2 py-1 rounded-full">
+                                Open Tab
+                                </span>
+                                <span 
+                                className="text-accent font-bold cursor-pointer"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleClientVisibility(client.id);
+                                }}
+                                >
+                                {formatValue(tabTotal, isVisible, formatCurrency)}
+                                </span>
+                            </>
+                            ) : (
+                            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full font-medium">
+                                No open tab
                             </span>
-                            <span 
-                              className="text-accent font-bold cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleClientVisibility(client.id);
-                              }}
-                            >
-                              {formatValue(tabTotal, isVisible, formatCurrency)}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full font-medium">
-                            No open tab
-                          </span>
+                            )}
+                        </div>
+                        {client.tabOpenedAt && tabTotal > 0 && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Seated for: {formatDistanceToNow(new Date(client.tabOpenedAt), { addSuffix: false })}
+                            </p>
                         )}
-                      </div>
-                      {client.tabOpenedAt && tabTotal > 0 && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                              Seated for: {formatDistanceToNow(new Date(client.tabOpenedAt), { addSuffix: false })}
-                          </p>
-                      )}
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </CardContent>
-                </Card>
-              );
-            })}
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </CardContent>
+                    </Card>
+                );
+                })
+            ) : searchTerm ? (
+                <div className="text-center p-8 border-2 border-dashed rounded-lg flex flex-col items-center gap-4">
+                    <p className="text-muted-foreground">No client found for "{searchTerm}"</p>
+                    <Button onClick={handleCreateClientFromSearch}>
+                        <Plus className="mr-2" /> Create Client "{searchTerm}"
+                    </Button>
+                </div>
+            ) : null}
           </div>
         </ScrollArea>
       )}
