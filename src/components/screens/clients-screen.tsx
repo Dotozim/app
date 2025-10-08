@@ -22,7 +22,7 @@ import { Client } from "@/lib/types";
 import { MergeClientDialog } from "../app/merge-client-dialog";
 
 export function ClientsScreen() {
-  const { clients, navigateTo, setAddClientFormOpen, clientVisibilities, toggleClientVisibility, handleAddClient, setEditingClient, handleRemoveClient } = useAppContext();
+  const { clients, navigateTo, setAddClientFormOpen, clientVisibilities, toggleClientVisibility, handleAddClient, setEditingClient, handleRemoveClient, setActiveClientId } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [clientToMerge, setClientToMerge] = useState<Client | null>(null);
@@ -75,6 +75,11 @@ export function ClientsScreen() {
     }
   }
 
+  const handleNavigate = (clientId: string) => {
+    setActiveClientId(clientId);
+    navigateTo('client-detail');
+  };
+
   return (
     <>
     <div className="flex flex-col h-full">
@@ -90,17 +95,18 @@ export function ClientsScreen() {
           />
         </div>
 
-        {searchTerm && !exactMatchExists ? (
-          <div className="text-center py-2">
-            <Button variant="outline" onClick={handleCreateClientFromSearch} className="w-full">
-              <Plus className="mr-2" /> Create Client "{searchTerm}"
+        {searchTerm && !exactMatchExists && (
+            <div className="text-center py-2">
+                <Button variant="outline" onClick={handleCreateClientFromSearch} className="w-full">
+                <Plus className="mr-2" /> Create Client "{searchTerm}"
+                </Button>
+            </div>
+        )}
+        {!searchTerm && (
+            <Button className="w-full" onClick={() => setAddClientFormOpen(true)}>
+                <Plus className="mr-2" /> New Client
             </Button>
-          </div>
-        ) : !searchTerm ? (
-          <Button className="w-full" onClick={() => setAddClientFormOpen(true)}>
-            <Plus className="mr-2" /> New Client
-          </Button>
-        ) : null}
+        )}
       </div>
 
       {clients.length === 0 && !searchTerm ? (
@@ -115,52 +121,56 @@ export function ClientsScreen() {
 
                 return (
                   <DropdownMenu key={client.id}>
-                    <DropdownMenuTrigger asChild>
-                      <Card
-                        className="cursor-pointer hover:bg-secondary transition-colors"
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div className="flex-1" onClick={() => navigateTo('client-detail', client.id)}>
-                              <h3 className="font-semibold text-lg">{client.name}</h3>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                  {tabTotal > 0 ? (
-                                  <>
-                                      <span className="bg-accent/20 text-accent font-medium text-xs px-2 py-1 rounded-full">
-                                      Open Tab
-                                      </span>
-                                      <span 
-                                      className="text-accent font-bold cursor-pointer"
-                                      onClick={(e) => {
-                                          e.stopPropagation();
-                                          toggleClientVisibility(client.id);
-                                      }}
-                                      >
-                                      {formatValue(tabTotal, isVisible, formatCurrency)}
-                                      </span>
-                                  </>
-                                  ) : (
-                                  <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full font-medium">
-                                      No open tab
-                                  </span>
-                                  )}
-                              </div>
-                              {client.tabOpenedAt && tabTotal > 0 && (
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                      Seated for: {formatDistanceToNow(new Date(client.tabOpenedAt), { addSuffix: false })}
-                                  </p>
-                              )}
+                    <Card
+                      onClick={() => handleNavigate(client.id)}
+                      className="cursor-pointer hover:bg-secondary transition-colors"
+                    >
+                      <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{client.name}</h3>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                {tabTotal > 0 ? (
+                                <>
+                                    <span className="bg-accent/20 text-accent font-medium text-xs px-2 py-1 rounded-full">
+                                    Open Tab
+                                    </span>
+                                    <span 
+                                    className="text-accent font-bold cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleClientVisibility(client.id);
+                                    }}
+                                    >
+                                    {formatValue(tabTotal, isVisible, formatCurrency)}
+                                    </span>
+                                </>
+                                ) : (
+                                <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full font-medium">
+                                    No open tab
+                                </span>
+                                )}
                             </div>
-                            <div className="flex items-center">
-                              <div onClick={() => navigateTo('client-detail', client.id)}>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <MoreHorizontal className="h-5 w-5 text-muted-foreground ml-2" />
-                              </div>
-                            </div>
-                        </CardContent>
-                      </Card>
-                    </DropdownMenuTrigger>
+                            {client.tabOpenedAt && tabTotal > 0 && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Seated for: {formatDistanceToNow(new Date(client.tabOpenedAt), { addSuffix: false })}
+                                </p>
+                            )}
+                          </div>
+                          <div className="flex items-center">
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 ml-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                          </div>
+                      </CardContent>
+                    </Card>
                      <DropdownMenuContent onClick={(e) => e.stopPropagation()} sideOffset={10} align="end">
                         <DropdownMenuItem onClick={() => handleEdit(client)}>
                             <Edit className="mr-2 h-4 w-4" />

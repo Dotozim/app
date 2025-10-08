@@ -17,6 +17,7 @@ type AppContextType = {
   isSensitiveDataVisible: boolean;
   clientVisibilities: Record<string, boolean>;
   editingClient: Client | null;
+  archivedClients: Client[];
 
   // Actions
   handleAddItem: (clientId: string, item: Omit<Item, 'id' | 'quantity'>) => void;
@@ -32,8 +33,9 @@ type AppContextType = {
   handleRemoveProduct: (productId: string) => void;
   
   // Navigation
-  navigateTo: (screen: Screen, clientId?: string) => void;
+  navigateTo: (screen: Screen) => void;
   navigateBack: () => void;
+  setActiveClientId: (clientId: string | null) => void;
   
   // UI Actions
   setAddClientFormOpen: (isOpen: boolean) => void;
@@ -41,7 +43,6 @@ type AppContextType = {
   setEditingClient: (client: Client | null) => void;
   toggleSensitiveDataVisibility: () => void;
   toggleClientVisibility: (clientId: string) => void;
-  archivedClients: Client[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -134,7 +135,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     const newClients = [...clients, newClient];
     setClients(newClients);
-    navigateTo('client-detail', newClient.id);
+    setActiveClientId(newClient.id);
+    navigateTo('client-detail');
   };
   
   const handleUpdateClient = (clientId: string, name: string) => {
@@ -349,10 +351,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const navigateTo = (screen: Screen, clientId?: string) => {
-    if (clientId) {
-      setActiveClientId(clientId);
-    }
+  const navigateTo = (screen: Screen) => {
     if (screen === 'clients' || screen === 'home' || screen === 'products' || screen === 'analytics') {
         setActiveClientId(null);
     }
@@ -379,16 +378,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
   const value: AppContextType = {
-    clients: activeClients,
+    clients: currentScreen === 'analytics' ? clients : activeClients,
     products,
     activeClient,
     currentScreen,
     navigationHistory,
     isAddClientFormOpen,
     isAddProductFormOpen,
-    isSensitiveDataVisible,
+isSensitiveDataVisible,
     clientVisibilities,
     editingClient,
+    archivedClients,
     handleAddItem,
     handleRemoveItem,
     handleSettleTab,
@@ -402,17 +402,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleRemoveProduct,
     navigateTo,
     navigateBack,
+    setActiveClientId,
     setAddClientFormOpen,
     setAddProductFormOpen,
     setEditingClient,
     toggleSensitiveDataVisibility,
     toggleClientVisibility,
-    archivedClients,
   };
-
-  if (currentScreen === 'analytics') {
-    value.clients = clients;
-  }
   
   return (
     <AppContext.Provider value={value}>
