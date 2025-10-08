@@ -8,13 +8,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { PaymentMethod, SplitPayment } from "@/lib/types";
 import { useState, useMemo } from "react";
-import { Switch } from "../ui/switch";
-import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { DollarSign, CreditCard, Banknote, Landmark, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import { DollarSign, CreditCard, Banknote, Landmark, Plus, Trash2 } from "lucide-react";
 
 const paymentMethods: { name: PaymentMethod; icon: JSX.Element }[] = [
     { name: 'Cash', icon: <Banknote /> },
@@ -25,7 +23,6 @@ const paymentMethods: { name: PaymentMethod; icon: JSX.Element }[] = [
 export function SettleTabScreen() {
   const { activeClient, handleSettleTab, isSensitiveDataVisible } = useAppContext();
   const { toast } = useToast();
-  const [isClientValueVisible, setIsClientValueVisible] = useState(true);
   const [payments, setPayments] = useState<SplitPayment[]>([]);
   const [currentPaymentAmount, setCurrentPaymentAmount] = useState('');
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<PaymentMethod>('Cash');
@@ -33,8 +30,6 @@ export function SettleTabScreen() {
   if (!activeClient) {
     return <div className="text-center py-10">No client selected.</div>;
   }
-  
-  const isGlobalToggleVisible = isSensitiveDataVisible;
 
   const total = useMemo(() => activeClient.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0), [activeClient.currentTab]);
   const totalPaid = useMemo(() => payments.reduce((sum, p) => sum + p.amount, 0), [payments]);
@@ -81,22 +76,7 @@ export function SettleTabScreen() {
     <div className="h-full flex flex-col">
       <Card className="flex-grow flex flex-col overflow-hidden">
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-                <CardTitle>Settle Tab</CardTitle>
-            </div>
-             <div className="flex items-center gap-2">
-                <Switch
-                id="client-privacy-mode"
-                checked={!isClientValueVisible}
-                onCheckedChange={() => setIsClientValueVisible(prev => !prev)}
-                aria-label="Toggle client value visibility"
-                />
-                <Label htmlFor="client-privacy-mode">
-                    {isClientValueVisible ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-primary" />}
-                </Label>
-            </div>
-          </div>
+          <CardTitle>Settle Tab</CardTitle>
         </CardHeader>
         <ScrollArea className="flex-grow">
           <CardContent className="space-y-4 pr-6">
@@ -104,17 +84,17 @@ export function SettleTabScreen() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex justify-between items-center text-md font-medium">
                     <span>Total Bill:</span>
-                    <span>{formatValue(total, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
+                    <span>{formatValue(total, isSensitiveDataVisible, formatCurrency)}</span>
                 </div>
                 <div className="flex justify-between items-center text-md font-medium text-destructive">
                     <span>Remaining:</span>
-                    <span>{formatValue(remainingBalance, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
+                    <span>{formatValue(remainingBalance, isSensitiveDataVisible, formatCurrency)}</span>
                 </div>
               </CardContent>
             </Card>
 
             <div className="space-y-2">
-              <Label>Add a Payment</Label>
+              <p className="text-sm font-medium">Add a Payment</p>
               <div className='flex flex-col gap-2 mb-2'>
                   {paymentMethods.map(pm => (
                       <Button 
@@ -143,7 +123,7 @@ export function SettleTabScreen() {
             </div>
             
             <div className="space-y-2">
-                {payments.length > 0 && <Label>Payments Added</Label>}
+                {payments.length > 0 && <p className="text-sm font-medium">Payments Added</p>}
                   <div className="space-y-2">
                     {payments.map((p, index) => (
                       <div key={index} className="flex justify-between items-center text-sm p-2 rounded-md bg-secondary">
@@ -152,7 +132,7 @@ export function SettleTabScreen() {
                           <span>{p.method}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono">{formatValue(p.amount, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
+                          <span className="font-mono">{formatValue(p.amount, isSensitiveDataVisible, formatCurrency)}</span>
                           <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => handleRemovePayment(index)}>
                             <Trash2 className="h-4 w-4"/>
                           </Button>
