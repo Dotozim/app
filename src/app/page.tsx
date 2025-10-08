@@ -8,7 +8,6 @@ import { ClientTab } from '@/components/app/client-tab';
 import { EmptyState } from '@/components/app/empty-state';
 import { BottomNav } from '@/components/app/bottom-nav';
 import { ClientListSheet } from '@/components/app/client-list-sheet';
-import { AddItemForm } from '@/components/app/add-item-form';
 
 const initialClients: Client[] = [
   {
@@ -111,45 +110,48 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <AppHeader clientName={activeClient?.name} />
-      <main className="flex-grow p-4 md:p-6 lg:p-8 pb-24">
-        {activeClient ? (
-           <ClientTab
-              client={activeClient}
-              onAddItem={(item) => handleAddItem(activeClient.id, item)}
-              onRemoveItem={(itemId) => handleRemoveItem(activeClient.id, itemId)}
-              onSettleTab={() => handleSettleTab(activeClient.id)}
+    <div className="bg-gray-200 flex items-center justify-center min-h-screen py-8">
+      <div className="relative w-[360px] h-[800px] bg-white overflow-hidden rounded-[2.5rem] border-[14px] border-black shadow-2xl">
+        <div className="flex flex-col h-full">
+          <AppHeader clientName={activeClient?.name} />
+          <main className="flex-grow p-4 md:p-6 lg:p-8 pb-24 overflow-y-auto">
+            {activeClient ? (
+              <ClientTab
+                  client={activeClient}
+                  onAddItem={(item) => handleAddItem(activeClient.id, item)}
+                  onRemoveItem={(itemId) => handleRemoveItem(activeClient.id, itemId)}
+                  onSettleTab={() => handleSettleTab(activeClient.id)}
+                />
+            ) : (
+              <EmptyState onAddClient={() => setAddClientFormOpen(true)} />
+            )}
+          </main>
+
+          {clients.length > 0 && (
+            <BottomNav
+              onListClients={() => setClientSheetOpen(true)}
+              onAddClient={() => setAddClientFormOpen(true)}
             />
-        ) : (
-          <EmptyState onAddClient={() => setAddClientFormOpen(true)} />
-        )}
-      </main>
-
-      {clients.length > 0 && (
-        <BottomNav
-          onListClients={() => setClientSheetOpen(true)}
-          onAddClient={() => setAddClientFormOpen(true)}
-        />
-      )}
-      
-      <ClientListSheet
-        isOpen={isClientSheetOpen}
-        onOpenChange={setClientSheetOpen}
-        clients={sortedClients}
-        activeClientId={activeClientId}
-        onClientSelect={(id) => {
-          setActiveClientId(id);
-          setClientSheetOpen(false);
-        }}
-      />
-      
-      <AddClientForm
-        isOpen={isAddClientFormOpen}
-        onOpenChange={setAddClientFormOpen}
-        onAddClient={handleAddClient}
-      />
-
+          )}
+          
+          <ClientListSheet
+            isOpen={isClientSheetOpen}
+            onOpenChange={setClientSheetOpen}
+            clients={sortedClients}
+            activeClientId={activeClientId}
+            onClientSelect={(id) => {
+              setActiveClientId(id);
+              setClientSheetOpen(false);
+            }}
+          />
+          
+          <AddClientForm
+            isOpen={isAddClientFormOpen}
+            onOpenChange={setAddClientFormOpen}
+            onAddClient={handleAddClient}
+          />
+        </div>
+      </div>
     </div>
   );
 }
