@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/context/app-context';
+import { useEffect } from 'react';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -30,7 +31,7 @@ const formSchema = z.object({
 });
 
 export function AddClientForm() {
-  const { isAddClientFormOpen, setAddClientFormOpen, handleAddClient } = useAppContext();
+  const { isAddClientFormOpen, setAddClientFormOpen, handleAddClient, editingClient, handleUpdateClient, setEditingClient } = useAppContext();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,20 +39,40 @@ export function AddClientForm() {
       name: '',
     },
   });
+  
+  const isEditing = !!editingClient;
+
+  useEffect(() => {
+    if (isEditing) {
+      form.reset({ name: editingClient.name });
+    } else {
+      form.reset({ name: '' });
+    }
+  }, [editingClient, isEditing, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    handleAddClient(values.name);
+    if (isEditing && editingClient) {
+        handleUpdateClient(editingClient.id, values.name);
+    } else {
+        handleAddClient(values.name);
+    }
     form.reset();
     setAddClientFormOpen(false);
+    setEditingClient(null);
+  }
+
+  const handleClose = () => {
+    setAddClientFormOpen(false);
+    setEditingClient(null);
   }
 
   return (
-    <Dialog open={isAddClientFormOpen} onOpenChange={setAddClientFormOpen}>
+    <Dialog open={isAddClientFormOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Client Tab</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Client Name' : 'Create New Client Tab'}</DialogTitle>
           <DialogDescription>
-            Enter the client's name to start a new tab for them.
+            {isEditing ? 'Update the client\'s name.' : "Enter the client's name to start a new tab for them."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -70,8 +91,8 @@ export function AddClientForm() {
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setAddClientFormOpen(false)}>Cancel</Button>
-              <Button type="submit">Create Tab</Button>
+              <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+              <Button type="submit">{isEditing ? 'Save Changes' : 'Create Tab'}</Button>
             </DialogFooter>
           </form>
         </Form>

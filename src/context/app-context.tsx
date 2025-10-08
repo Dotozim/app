@@ -16,13 +16,16 @@ type AppContextType = {
   isAddProductFormOpen: boolean;
   isSensitiveDataVisible: boolean;
   clientVisibilities: Record<string, boolean>;
+  editingClient: Client | null;
 
   // Actions
   handleAddItem: (clientId: string, item: Omit<Item, 'id' | 'quantity'>) => void;
   handleRemoveItem: (clientId: string, itemId: string) => void;
   handleSettleTab: (clientId: string, payments: SplitPayment[]) => void;
   handleAddClient: (name: string) => void;
+  handleUpdateClient: (clientId: string, name: string) => void;
   handleRemoveClient: (clientId: string) => void;
+  handleMergeClients: (sourceClientId: string, destinationClientId: string) => void;
   handleRemoveTabSession: (clientId: string, sessionId: string) => void;
   handleAddProduct: (product: Omit<Product, 'id'>) => void;
   handleUpdateProduct: (product: Product) => void;
@@ -35,6 +38,7 @@ type AppContextType = {
   // UI Actions
   setAddClientFormOpen: (isOpen: boolean) => void;
   setAddProductFormOpen: (isOpen: boolean) => void;
+  setEditingClient: (client: Client | null) => void;
   toggleSensitiveDataVisibility: () => void;
   toggleClientVisibility: (clientId: string) => void;
   archivedClients: Client[];
@@ -105,6 +109,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isAddProductFormOpen, setAddProductFormOpen] = useState(false);
   const [isSensitiveDataVisible, setIsSensitiveDataVisible] = useState(true);
   const [clientVisibilities, setClientVisibilities] = useState<Record<string, boolean>>({});
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+
 
   const toggleClientVisibility = (clientId: string) => {
     setClientVisibilities(prev => ({
@@ -131,13 +137,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigateTo('client-detail', newClient.id);
   };
   
+  const handleUpdateClient = (clientId: string, name: string) => {
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, name } : c));
+    toast({
+        title: "Client Updated",
+        description: "The client's name has been successfully updated.",
+    });
+  }
+
   const handleRemoveClient = (clientId: string) => {
     setClients(prev => prev.filter(c => c.id !== clientId));
-    navigateTo('analytics');
+    if (activeClientId === clientId) {
+      navigateTo('clients');
+    }
     toast({
-        title: "Client Removed",
-        description: "The client and their history have been deleted.",
+        title: "Client Deleted",
+        description: "The client and their history have been permanently deleted.",
     })
+  };
+
+  const handleMergeClients = (sourceClientId: string, destinationClientId: string) => {
+    const sourceClient = clients.find(c => c.id === sourceClientId);
+    const destClient = clients.find(c => c.id === destinationClientId);
+
+    if (!sourceClient || !destClient) {
+        toast({ variant: 'destructive', title: "Error", description: "One or both clients not found for merging." });
+        return;
+    }
+
+    setClients(prev => {
+      const updatedClients = prev.map(c => {
+        if (c.id === destinationClientId) {
+          // Merge tabs and history
+          const mergedTab = [...c.currentTab];
+          sourceClient.currentTab.forEach(sourceItem => {
+            const destItem = mergedTab.find(item => item.name === sourceItem.name);
+            if (destItem) {
+              destItem.quantity += sourceItem.quantity;
+            } else {
+              mergedTab.push(sourceItem);
+            }
+          });
+
+          const mergedHistory = [...c.tabHistory, ...sourceClient.tabHistory].sort(
+            (a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime()
+          );
+
+          return { ...c, currentTab: mergedTab, tabHistory: mergedHistory };
+        }
+        return c;
+      });
+
+      // Remove source client
+      return updatedClients.filter(c => c.id !== sourceClientId);
+    });
+
+    toast({ title: "Clients Merged", description: `${sourceClient.name} has been merged into ${destClient.name}.` });
   };
 
   const handleAddItem = (clientId: string, product: Omit<Item, 'id' | 'quantity'>) => {
@@ -333,11 +388,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isAddProductFormOpen,
     isSensitiveDataVisible,
     clientVisibilities,
+    editingClient,
     handleAddItem,
     handleRemoveItem,
     handleSettleTab,
     handleAddClient,
+    handleUpdateClient,
     handleRemoveClient,
+    handleMergeClients,
     handleRemoveTabSession,
     handleAddProduct,
     handleUpdateProduct,
@@ -346,6 +404,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     navigateBack,
     setAddClientFormOpen,
     setAddProductFormOpen,
+    setEditingClient,
     toggleSensitiveDataVisibility,
     toggleClientVisibility,
     archivedClients, // Exposing archived clients for analytics
