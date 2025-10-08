@@ -26,35 +26,50 @@ export function AnalyticsScreen() {
     let totalRevenue = 0;
     
     const clientAnalytics = clients.map(client => {
-      const clientHistory = [...client.purchaseHistory];
       let clientTotal = 0;
-      const clientProductCounts: { [key: string]: { count: number; revenue: number; purchases: {date: string, quantity: number, paymentMethod: string}[] } } = {};
       const clientCategoryCounts: { [key: string]: number } = {};
       
-      clientHistory.forEach(item => {
+      client.purchaseHistory.forEach(item => {
         const itemTotal = item.price * item.quantity;
         totalRevenue += itemTotal;
         clientTotal += itemTotal;
         
-        clientProductCounts[item.name] = clientProductCounts[item.name] || { count: 0, revenue: 0, purchases: [] };
-        clientProductCounts[item.name].count += item.quantity;
-        clientProductCounts[item.name].revenue += itemTotal;
-        clientProductCounts[item.name].purchases.push({
-            date: item.purchaseDate,
-            quantity: item.quantity,
-            paymentMethod: item.paymentMethod,
-        });
-
         if (item.category) {
             clientCategoryCounts[item.category] = (clientCategoryCounts[item.category] || 0) + item.quantity;
         }
       });
       
-      const totalSeatedTime = client.tabHistory.reduce((acc, tab) => acc + tab.duration, 0);
+      const sortedDurations = client.tabHistory.map(tab => tab.duration).sort((a,b) => a - b);
+      let medianSeatedTime = 0;
+      if (sortedDurations.length > 0) {
+          const mid = Math.floor(sortedDurations.length / 2);
+          medianSeatedTime = sortedDurations.length % 2 !== 0 
+            ? sortedDurations[mid] 
+            : (sortedDurations[mid - 1] + sortedDurations[mid]) / 2;
+      }
 
-      const clientTopProducts = Object.entries(clientProductCounts)
-        .sort(([, a], [, b]) => b.revenue - a.revenue)
-        .map(([name, data]) => ({ name, ...data }));
+      const enrichedTabHistory = client.tabHistory.map(session => {
+        const sessionPurchases = client.purchaseHistory.filter(purchase => {
+            const purchaseTime = new Date(purchase.purchaseDate).getTime();
+            return purchaseTime >= new Date(session.openedAt).getTime() && purchaseTime <= new Date(session.closedAt).getTime();
+        });
+        const purchaseGroups: {[key: string]: {name: string, quantity: number, price: number, paymentMethod: string, category: string, date: string}} = {};
+
+        sessionPurchases.forEach(p => {
+          const key = `${p.name}-${p.price}`;
+          if (!purchaseGroups[key]) {
+            purchaseGroups[key] = {name: p.name, quantity: 0, price: p.price, paymentMethod: p.paymentMethod, category: p.category, date: p.purchaseDate};
+          }
+          purchaseGroups[key].quantity += p.quantity;
+        });
+
+        const total = sessionPurchases.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+        return {
+          ...session,
+          purchases: Object.values(purchaseGroups),
+          total,
+        };
+      }).sort((a,b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime());
         
       const mostConsumedCategory = Object.keys(clientCategoryCounts).length > 0 
         ? Object.entries(clientCategoryCounts).sort(([,a],[,b]) => b - a)[0][0]
@@ -64,10 +79,9 @@ export function AnalyticsScreen() {
           id: client.id,
           name: client.name,
           totalSpent: clientTotal,
-          totalSeatedTime: totalSeatedTime,
-          topProducts: clientTopProducts,
+          medianSeatedTime: medianSeatedTime,
           mostConsumedCategory: mostConsumedCategory,
-          tabHistory: client.tabHistory.sort((a,b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime()),
+          tabHistory: enrichedTabHistory,
       }
     }).sort((a,b) => b.totalSpent - a.totalSpent);
       
@@ -114,56 +128,53 @@ export function AnalyticsScreen() {
                                 </p>
                             </div>
                         )}
-                        {client.totalSeatedTime > 0 && (
+                        {client.medianSeatedTime > 0 && (
                             <div className="flex-1 p-2 bg-muted rounded-md text-center text-sm">
                                 <p className="text-muted-foreground">
-                                Total Seated Time: <Badge variant="outline">{formatDuration(client.totalSeatedTime)}</Badge>
+                                Median Seated Time: <Badge variant="outline">{formatDuration(client.medianSeatedTime)}</Badge>
                                 </p>
                             </div>
                         )}
                     </div>
                     
-                    <div className="space-y-6">
-                        <div>
-                            <h4 className="font-semibold mb-2 text-md">Purchase History for {client.name}</h4>
-                            <div className="space-y-4">
-                            {client.topProducts.length > 0 ? client.topProducts.map((product) => (
-                              <div key={product.name} className="bg-muted p-3 rounded-md">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <p className="font-medium text-sm">{product.name}</p>
-                                    <p className="text-xs text-muted-foreground">{formatValue(product.count, isSensitiveDataVisible, (val) => `${val} total sold`)}</p>
-                                  </div>
-                                  <p className="font-semibold text-primary/90">{formatValue(product.revenue, isSensitiveDataVisible, formatCurrency)}</p>
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-md">Visit History</h4>
+                      {client.tabHistory.length > 0 ? (
+                        <div className="space-y-4">
+                          {client.tabHistory.map((session, index) => (
+                            <div key={index} className="bg-muted p-3 rounded-lg">
+                              <div className="flex justify-between items-center mb-3">
+                                <div>
+                                  <p className="font-medium">
+                                    Visit on {format(new Date(session.closedAt), 'MMM d, yyyy')}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Total: {formatValue(session.total, isSensitiveDataVisible, formatCurrency)}
+                                  </p>
                                 </div>
-                                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                                    {product.purchases.map((purchase, index) => (
-                                        <li key={index} className="flex justify-between">
-                                            <span>{formatValue(purchase.quantity, isSensitiveDataVisible, (val) => `${val}x`)} on {format(new Date(purchase.date), 'MMM d, yyyy')}</span>
-                                            <span>({purchase.paymentMethod})</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                <Badge variant="secondary">{formatDuration(session.duration)}</Badge>
                               </div>
-                            )) : <p className="text-muted-foreground text-center py-2 text-sm">No purchase history for this client.</p>}
-                           </div>
-                        </div>
-
-                        <div>
-                            <h4 className="font-semibold mb-2 text-md">Tab History</h4>
-                            <div className="space-y-2">
-                                {client.tabHistory.length > 0 ? client.tabHistory.map((session, index) => (
-                                    <div key={index} className="bg-muted p-3 rounded-md text-sm">
-                                        <div className="flex justify-between items-center">
-                                            <p className="font-medium">
-                                                Visit on {format(new Date(session.closedAt), 'MMM d, yyyy')}
-                                            </p>
-                                            <Badge variant="secondary">{formatDuration(session.duration)}</Badge>
-                                        </div>
+                              <div className="space-y-2 text-sm">
+                                {session.purchases.length > 0 ? session.purchases.map((purchase, pIndex) => (
+                                  <div key={pIndex} className="flex justify-between items-center bg-background/50 p-2 rounded-md">
+                                    <div>
+                                      <p className="font-medium text-sm">{purchase.quantity}x {purchase.name}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Paid with {purchase.paymentMethod}
+                                      </p>
                                     </div>
-                                )) : <p className="text-muted-foreground text-center py-2 text-sm">No past tabs for this client.</p>}
+                                    <p className="font-semibold text-primary/90 text-sm">
+                                      {formatValue(purchase.price * purchase.quantity, isSensitiveDataVisible, formatCurrency)}
+                                    </p>
+                                  </div>
+                                )) : <p className="text-muted-foreground text-center py-2 text-xs">No items recorded for this visit.</p>}
+                              </div>
                             </div>
+                          ))}
                         </div>
+                      ) : (
+                        <p className="text-muted-foreground text-center py-4">No visit history available.</p>
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
