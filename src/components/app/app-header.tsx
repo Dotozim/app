@@ -1,23 +1,39 @@
-import { Beer } from 'lucide-react';
+'use client';
+import { Beer, ChevronLeft } from 'lucide-react';
+import { useAppContext } from '@/context/app-context';
+import { Button } from '../ui/button';
 
-type AppHeaderProps = {
-  clientName?: string;
+const screenTitles: Record<string, string> = {
+  home: 'TabMaster',
+  clients: 'Clients',
+  'client-detail': 'Client Tab',
+  'add-items': 'Add Items',
+  'settle-tab': 'Settle Tab',
+  analytics: 'Analytics',
 };
 
-export function AppHeader({ clientName }: AppHeaderProps) {
+export function AppHeader() {
+  const { currentScreen, activeClient, navigateBack } = useAppContext();
+
+  const canGoBack = currentScreen === 'client-detail' || currentScreen === 'add-items' || currentScreen === 'settle-tab';
+  const title = canGoBack && activeClient ? activeClient.name : screenTitles[currentScreen] || 'TabMaster';
+
   return (
-    <header className="flex items-center justify-between gap-4 px-4 md:px-8 py-3 border-b bg-background sticky top-0 z-10">
-      <div className="flex items-center gap-2 text-primary">
-        <Beer className="h-7 w-7" />
-        <span className="text-xl font-bold font-headline tracking-tight">
-          TabMaster
-        </span>
+    <header className="flex items-center gap-4 px-4 py-3 border-b bg-background sticky top-0 z-10 h-16">
+      <div className="flex items-center gap-2 flex-1">
+        {canGoBack ? (
+          <Button variant="ghost" size="icon" onClick={navigateBack} className='-ml-2'>
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 text-primary">
+            <Beer className="h-7 w-7" />
+          </div>
+        )}
+        <h1 className="text-xl font-bold tracking-tight">
+          {title}
+        </h1>
       </div>
-      {clientName && (
-        <div className="text-lg font-medium text-foreground/80">
-          {clientName}
-        </div>
-      )}
     </header>
   );
 }

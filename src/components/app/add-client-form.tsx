@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { useAppContext } from '@/context/app-context';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -28,13 +29,9 @@ const formSchema = z.object({
   }),
 });
 
-type AddClientFormProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  onAddClient: (name: string) => void;
-};
-
-export function AddClientForm({ isOpen, onOpenChange, onAddClient }: AddClientFormProps) {
+export function AddClientForm() {
+  const { isAddClientFormOpen, setAddClientFormOpen, handleAddClient } = useAppContext();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,13 +40,13 @@ export function AddClientForm({ isOpen, onOpenChange, onAddClient }: AddClientFo
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onAddClient(values.name);
+    handleAddClient(values.name);
     form.reset();
-    onOpenChange(false);
+    setAddClientFormOpen(false);
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isAddClientFormOpen} onOpenChange={setAddClientFormOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Client Tab</DialogTitle>
@@ -73,7 +70,7 @@ export function AddClientForm({ isOpen, onOpenChange, onAddClient }: AddClientFo
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setAddClientFormOpen(false)}>Cancel</Button>
               <Button type="submit">Create Tab</Button>
             </DialogFooter>
           </form>

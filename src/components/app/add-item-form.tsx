@@ -16,17 +16,16 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
+import { useAppContext } from '@/context/app-context';
 
 const formSchema = z.object({
   itemName: z.string().min(1, 'Item name cannot be empty.'),
 });
 
-type AddItemFormProps = {
-  onItemAdded: (item: Omit<Item, 'id'>) => void;
-};
 
-export function AddItemForm({ onItemAdded }: AddItemFormProps) {
+export function AddItemForm() {
+  const { activeClient, handleAddItem } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -38,13 +37,15 @@ export function AddItemForm({ onItemAdded }: AddItemFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!activeClient) return;
+
     setIsLoading(true);
     try {
       const result = await addItemToTabWithAIPriceLookup({
         itemName: values.itemName,
       });
       if (result) {
-        onItemAdded(result);
+        handleAddItem(activeClient.id, result);
         form.reset();
       }
     } catch (error) {
@@ -75,8 +76,8 @@ export function AddItemForm({ onItemAdded }: AddItemFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isLoading} className="w-24">
-          {isLoading ? <Loader2 className="animate-spin" /> : 'Add Item'}
+        <Button type="submit" disabled={isLoading} className="w-28">
+          {isLoading ? <Loader2 className="animate-spin" /> : <><Plus className="mr-2" /> Add</>}
         </Button>
       </form>
     </Form>
