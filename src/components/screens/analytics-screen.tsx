@@ -1,6 +1,6 @@
 'use client';
 import { useAppContext } from "@/context/app-context";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
@@ -8,8 +8,9 @@ import { format } from "date-fns";
 import { Badge } from "../ui/badge";
 import { Purchase } from "@/lib/types";
 import { Button } from "../ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "../ui/input";
 
 
 const formatDuration = (milliseconds: number) => {
@@ -26,11 +27,12 @@ const formatDuration = (milliseconds: number) => {
 
 export function AnalyticsScreen() {
   const { clients, isSensitiveDataVisible, handleRemoveClient, handleRemoveTabSession } = useAppContext();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const { totalRevenue, clientAnalytics } = useMemo(() => {
+  const { totalRevenue, clientAnalytics, allClients } = useMemo(() => {
     let totalRevenue = 0;
     
-    const clientAnalytics = clients.map(client => {
+    const allClients = clients.map(client => {
       let clientTotal = 0;
       const clientCategoryCounts: { [key: string]: number } = {};
       
@@ -77,9 +79,11 @@ export function AnalyticsScreen() {
           isArchived: client.isArchived,
       }
     }).sort((a,b) => b.totalSpent - a.totalSpent);
+
+    const clientAnalytics = allClients.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
       
-    return { totalRevenue, clientAnalytics };
-  }, [clients]);
+    return { totalRevenue, clientAnalytics, allClients };
+  }, [clients, searchTerm]);
 
 
   return (
@@ -102,6 +106,22 @@ export function AnalyticsScreen() {
             <CardDescription>Consumption analysis for each client.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input 
+                type="text" 
+                placeholder="Search clients..." 
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                list="client-names"
+              />
+              <datalist id="client-names">
+                {allClients.map(client => (
+                  <option key={client.id} value={client.name} />
+                ))}
+              </datalist>
+          </div>
           {clientAnalytics.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
               {clientAnalytics.map(client => (
