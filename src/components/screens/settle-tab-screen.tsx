@@ -79,7 +79,7 @@ export function SettleTabScreen() {
 
   return (
     <div className="h-full flex flex-col">
-      <Card className="flex-grow flex flex-col">
+      <Card className="flex-grow flex flex-col overflow-hidden">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
@@ -99,75 +99,72 @@ export function SettleTabScreen() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-grow space-y-4 flex flex-col">
-          <Card className="bg-secondary">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex justify-between items-center text-md font-medium">
-                  <span>Total Bill:</span>
-                  <span>{formatValue(total, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
-              </div>
-              <div className="flex justify-between items-center text-md font-medium text-destructive">
-                  <span>Remaining:</span>
-                  <span>{formatValue(remainingBalance, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-2">
-            <Label>Add a Payment</Label>
-            <div className='flex flex-col gap-2 mb-2'>
-                {paymentMethods.map(pm => (
-                    <Button 
-                        key={pm.name}
-                        variant={currentPaymentMethod === pm.name ? "default" : "secondary"}
-                        onClick={() => setCurrentPaymentMethod(pm.name)}
-                        className='flex items-center justify-start gap-2 h-12'
-                    >
-                        {React.cloneElement(pm.icon, { className: "h-5 w-5" })}
-                        <span>{pm.name}</span>
-                    </Button>
-                ))}
-            </div>
-            <div className="flex gap-2">
-              <Input 
-                type="number"
-                placeholder="Amount"
-                value={currentPaymentAmount}
-                onChange={(e) => setCurrentPaymentAmount(e.target.value)}
-                className="flex-grow"
-              />
-              <Button onClick={handleAddPayment} disabled={remainingBalance <= 0}>
-                <Plus />
-              </Button>
-            </div>
-          </div>
-          
-          
-          <div className="space-y-2 flex-grow min-h-0">
-              {payments.length > 0 && <Label>Payments Added</Label>}
-              <ScrollArea className="h-full pr-2">
-                <div className="space-y-2">
-                  {payments.map((p, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm p-2 rounded-md bg-secondary">
-                      <div className="flex items-center gap-2">
-                        {getPaymentMethodIcon(p.method)}
-                        <span>{p.method}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">{formatValue(p.amount, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => handleRemovePayment(index)}>
-                          <Trash2 className="h-4 w-4"/>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+        <ScrollArea className="flex-grow">
+          <CardContent className="space-y-4 pr-6">
+            <Card className="bg-secondary">
+              <CardContent className="p-4 space-y-2">
+                <div className="flex justify-between items-center text-md font-medium">
+                    <span>Total Bill:</span>
+                    <span>{formatValue(total, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
                 </div>
-              </ScrollArea>
-            </div>
-          
+                <div className="flex justify-between items-center text-md font-medium text-destructive">
+                    <span>Remaining:</span>
+                    <span>{formatValue(remainingBalance, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-        </CardContent>
-        <CardFooter className="flex-col items-stretch gap-4 p-4 border-t mt-auto">
+            <div className="space-y-2">
+              <Label>Add a Payment</Label>
+              <div className='flex flex-col gap-2 mb-2'>
+                  {paymentMethods.map(pm => (
+                      <Button 
+                          key={pm.name}
+                          variant={currentPaymentMethod === pm.name ? "default" : "secondary"}
+                          onClick={() => setCurrentPaymentMethod(pm.name)}
+                          className='flex items-center justify-start gap-2 h-12'
+                      >
+                          {React.cloneElement(pm.icon, { className: "h-5 w-5" })}
+                          <span>{pm.name}</span>
+                      </Button>
+                  ))}
+              </div>
+              <div className="flex gap-2">
+                <Input 
+                  type="number"
+                  placeholder="Amount"
+                  value={currentPaymentAmount}
+                  onChange={(e) => setCurrentPaymentAmount(e.target.value)}
+                  className="flex-grow"
+                />
+                <Button onClick={handleAddPayment} disabled={remainingBalance <= 0}>
+                  <Plus />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+                {payments.length > 0 && <Label>Payments Added</Label>}
+                  <div className="space-y-2">
+                    {payments.map((p, index) => (
+                      <div key={index} className="flex justify-between items-center text-sm p-2 rounded-md bg-secondary">
+                        <div className="flex items-center gap-2">
+                          {getPaymentMethodIcon(p.method)}
+                          <span>{p.method}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono">{formatValue(p.amount, isGlobalToggleVisible && isClientValueVisible, formatCurrency)}</span>
+                          <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" onClick={() => handleRemovePayment(index)}>
+                            <Trash2 className="h-4 w-4"/>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+              </div>
+          </CardContent>
+        </ScrollArea>
+        <CardFooter className="flex-col items-stretch gap-4 p-4 border-t">
           <AlertDialog>
             <AlertDialogTrigger asChild>
                 <Button size="lg" disabled={Math.abs(remainingBalance) > 0.01 || payments.length === 0}>
