@@ -38,6 +38,11 @@ export function ClientsScreen() {
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   ).sort((a, b) => a.name.localeCompare(b.name));
+  
+  const exactMatchExists = useMemo(() => 
+    clients.some(c => c.name.toLowerCase() === searchTerm.toLowerCase()),
+    [clients, searchTerm]
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -65,6 +70,13 @@ export function ClientsScreen() {
       ) : (
         <ScrollArea className="flex-grow">
           <div className="space-y-3 pr-1">
+            {searchTerm && !exactMatchExists && (
+                <div className="text-center py-2">
+                    <Button variant="outline" onClick={handleCreateClientFromSearch} className="w-full">
+                        <Plus className="mr-2" /> Create Client "{searchTerm}"
+                    </Button>
+                </div>
+            )}
             {filteredClients.length > 0 ? (
                 filteredClients.map(client => {
                 const tabTotal = client.currentTab.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -113,11 +125,8 @@ export function ClientsScreen() {
                 );
                 })
             ) : searchTerm ? (
-                <div className="text-center p-8 border-2 border-dashed rounded-lg flex flex-col items-center gap-4">
+                 <div className="text-center p-8 border-2 border-dashed rounded-lg flex flex-col items-center gap-4 mt-4">
                     <p className="text-muted-foreground">No client found for "{searchTerm}"</p>
-                    <Button onClick={handleCreateClientFromSearch}>
-                        <Plus className="mr-2" /> Create Client "{searchTerm}"
-                    </Button>
                 </div>
             ) : null}
           </div>
