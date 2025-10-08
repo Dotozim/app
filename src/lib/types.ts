@@ -5,6 +5,7 @@ export interface Item {
   name: string;
   price: number;
   quantity: number;
+  imageUrl?: string;
 }
 
 export interface Purchase extends Item {
@@ -24,4 +25,5 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  imageUrl?: string;
 }

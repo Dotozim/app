@@ -21,6 +21,7 @@ type AppContextType = {
   handleSettleTab: (clientId: string, paymentMethod: PaymentMethod) => void;
   handleAddClient: (name: string) => void;
   handleAddProduct: (product: Omit<Product, 'id'>) => void;
+  handleUpdateProduct: (product: Product) => void;
   handleRemoveProduct: (productId: string) => void;
   
   // Navigation
@@ -38,30 +39,30 @@ const initialClients: Client[] = [
     id: '1',
     name: 'Eleanor Vance',
     currentTab: [
-      { id: 'a1', name: 'Craft IPA', price: 7.5, quantity: 2 },
-      { id: 'b2', name: 'Pretzel Bites', price: 5.0, quantity: 1 },
+      { id: 'a1', name: 'Craft IPA', price: 7.5, quantity: 2, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
+      { id: 'b2', name: 'Pretzel Bites', price: 5.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
     ],
-    purchaseHistory: [{ id: 'c3', name: 'Stout', price: 8.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Credit Card' }],
+    purchaseHistory: [{ id: 'c3', name: 'Stout', price: 8.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p3/400/400' }],
     tabOpenedAt: new Date().toISOString(),
   },
   {
     id: '2',
     name: 'Marcus Holloway',
-    currentTab: [{ id: 'd4', name: 'Lager', price: 6.0, quantity: 1 }],
+    currentTab: [{ id: 'd4', name: 'Lager', price: 6.0, quantity: 1, imageUrl: 'https://picsum.photos/seed/p4/400/400' }],
     purchaseHistory: [
-      { id: 'e5', name: 'Lager', price: 6.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Cash' },
-      { id: 'f6', name: 'Chicken Wings', price: 12.0, quantity: 1, purchaseDate: new Date().toISOString(), paymentMethod: 'Credit Card' },
+      { id: 'e5', name: 'Lager', price: 6.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Cash', imageUrl: 'https://picsum.photos/seed/p4/400/400' },
+      { id: 'f6', name: 'Chicken Wings', price: 12.0, quantity: 1, purchaseDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), paymentMethod: 'Credit Card', imageUrl: 'https://picsum.photos/seed/p5/400/400' },
     ],
     tabOpenedAt: new Date().toISOString(),
   },
 ];
 
 const initialProducts: Product[] = [
-    { id: 'p1', name: 'Craft IPA', price: 7.5 },
-    { id: 'p2', name: 'Pretzel Bites', price: 5.0 },
-    { id: 'p3', name: 'Stout', price: 8.0 },
-    { id: 'p4', name: 'Lager', price: 6.0 },
-    { id: 'p5', name: 'Chicken Wings', price: 12.0 },
+    { id: 'p1', name: 'Craft IPA', price: 7.5, imageUrl: 'https://picsum.photos/seed/p1/400/400' },
+    { id: 'p2', name: 'Pretzel Bites', price: 5.0, imageUrl: 'https://picsum.photos/seed/p2/400/400' },
+    { id: 'p3', name: 'Stout', price: 8.0, imageUrl: 'https://picsum.photos/seed/p3/400/400' },
+    { id: 'p4', name: 'Lager', price: 6.0, imageUrl: 'https://picsum.photos/seed/p4/400/400' },
+    { id: 'p5', name: 'Chicken Wings', price: 12.0, imageUrl: 'https://picsum.photos/seed/p5/400/400' },
 ];
 
 
@@ -160,6 +161,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProducts(prev => [...prev, newProduct]);
   };
 
+  const handleUpdateProduct = (updatedProduct: Product) => {
+    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    // Also update price in any open tabs
+    setClients(prevClients => prevClients.map(client => ({
+      ...client,
+      currentTab: client.currentTab.map(item => 
+        item.name === updatedProduct.name && item.price !== updatedProduct.price
+          ? { ...item, price: updatedProduct.price }
+          : item
+      )
+    })));
+  };
+
   const handleRemoveProduct = (productId: string) => {
     setProducts(prev => prev.filter(p => p.id !== productId));
   };
@@ -203,6 +217,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleSettleTab,
     handleAddClient,
     handleAddProduct,
+    handleUpdateProduct,
     handleRemoveProduct,
     navigateTo,
     navigateBack,

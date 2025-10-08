@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, DollarSign, Minus } from 'lucide-react';
 import { Separator } from '../ui/separator';
-import { format } from 'date-fns';
+import Image from 'next/image';
 
 export function ClientDetailScreen() {
   const { activeClient, navigateTo, handleAddItem, handleRemoveItem, products } = useAppContext();
@@ -22,11 +22,6 @@ export function ClientDetailScreen() {
     <div className="h-full flex flex-col gap-4">
       <Card>
         <CardContent className="p-4">
-            {activeClient.tabOpenedAt && (
-                <p className="text-xs text-muted-foreground mb-2">
-                    Tab opened: {format(new Date(activeClient.tabOpenedAt), "MMM d, yyyy 'at' h:mm a")}
-                </p>
-            )}
           <div className="flex items-center justify-between">
             <span className="font-bold text-lg text-foreground">Total</span>
             <span className="font-bold text-2xl text-primary">
@@ -66,6 +61,9 @@ export function ClientDetailScreen() {
                 className="flex justify-between items-center p-3 rounded-lg bg-secondary"
               >
                 <div className="flex items-center gap-3 flex-grow">
+                  {item.imageUrl && (
+                    <Image src={item.imageUrl} alt={item.name} width={40} height={40} className="rounded-md" />
+                  )}
                     <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground">

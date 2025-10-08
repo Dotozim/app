@@ -22,6 +22,7 @@ import { Plus, Minus } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
 import { formatCurrency } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+import Image from 'next/image';
 
 const formSchema = z.object({
   productId: z.string().min(1, 'Please select a product.'),
@@ -42,7 +43,7 @@ export function AddItemForm() {
     if (!activeClient) return;
     const product = products.find(p => p.id === values.productId);
     if(product) {
-        handleAddItem(activeClient.id, { name: product.name, price: product.price });
+        handleAddItem(activeClient.id, product);
         form.reset();
     }
   }
@@ -99,6 +100,9 @@ export function AddItemForm() {
                         className="flex justify-between items-center p-3 rounded-lg bg-secondary"
                         >
                           <div className="flex items-center gap-3 flex-grow">
+                             {item.imageUrl && (
+                                <Image src={item.imageUrl} alt={item.name} width={40} height={40} className="rounded-md" />
+                            )}
                             <div>
                               <p className="font-medium">{item.name}</p>
                               <p className="text-sm text-muted-foreground">

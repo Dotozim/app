@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { formatCurrency } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { format } from "date-fns";
 
 export function AnalyticsScreen() {
   const { clients } = useAppContext();
@@ -17,7 +18,7 @@ export function AnalyticsScreen() {
     const clientAnalytics = clients.map(client => {
       const clientHistory = [...client.purchaseHistory];
       let clientTotal = 0;
-      const clientProductCounts: { [key: string]: { count: number; revenue: number } } = {};
+      const clientProductCounts: { [key: string]: { count: number; revenue: number; purchases: {date: string, quantity: number, paymentMethod: string}[] } } = {};
 
       clientHistory.forEach(item => {
         const itemTotal = item.price * item.quantity;
@@ -30,14 +31,18 @@ export function AnalyticsScreen() {
         productCounts[item.name].revenue += itemTotal;
         
         // Aggregate for client-specific top products
-        clientProductCounts[item.name] = clientProductCounts[item.name] || { count: 0, revenue: 0 };
+        clientProductCounts[item.name] = clientProductCounts[item.name] || { count: 0, revenue: 0, purchases: [] };
         clientProductCounts[item.name].count += item.quantity;
         clientProductCounts[item.name].revenue += itemTotal;
+        clientProductCounts[item.name].purchases.push({
+            date: item.purchaseDate,
+            quantity: item.quantity,
+            paymentMethod: item.paymentMethod,
+        });
       });
 
       const clientTopProducts = Object.entries(clientProductCounts)
         .sort(([, a], [, b]) => b.revenue - a.revenue)
-        .slice(0, 5)
         .map(([name, data]) => ({ name, ...data }));
         
       return {
@@ -108,15 +113,25 @@ export function AnalyticsScreen() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <h4 className="font-semibold mb-2 text-md">Top Products for {client.name}</h4>
-                    <div className="space-y-2">
+                    <h4 className="font-semibold mb-2 text-md">Purchase History for {client.name}</h4>
+                    <div className="space-y-4">
                     {client.topProducts.length > 0 ? client.topProducts.map((product) => (
-                      <div key={product.name} className="flex justify-between items-center bg-muted p-2 rounded-md">
-                        <div>
-                          <p className="font-medium text-sm">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">{product.count} sold</p>
+                      <div key={product.name} className="bg-muted p-3 rounded-md">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-sm">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">{product.count} total sold</p>
+                          </div>
+                          <p className="font-semibold text-primary/90">{formatCurrency(product.revenue)}</p>
                         </div>
-                        <p className="font-semibold text-primary/90">{formatCurrency(product.revenue)}</p>
+                        <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                            {product.purchases.map((purchase, index) => (
+                                <li key={index} className="flex justify-between">
+                                    <span>{purchase.quantity}x on {format(new Date(purchase.date), 'MMM d, yyyy')}</span>
+                                    <span>({purchase.paymentMethod})</span>
+                                </li>
+                            ))}
+                        </ul>
                       </div>
                     )) : <p className="text-muted-foreground text-center py-2 text-sm">No purchase history for this client.</p>}
                    </div>
