@@ -50,7 +50,7 @@ export function AppHeader() {
           {title}
         </h1>
       </div>
-      {currentScreen !== 'products' && (
+      {currentScreen !== 'products' && currentScreen !== 'clients' && (
         <div className="flex items-center gap-2">
           <Switch
             id="privacy-mode"
