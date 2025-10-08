@@ -1,3 +1,4 @@
+
 'use client';
 import { useAppContext } from "@/context/app-context";
 import { useMemo } from "react";
@@ -56,7 +57,7 @@ export function AnalyticsScreen() {
         const purchaseGroups: {[key: string]: {name: string, quantity: number, price: number, paymentMethod: string, category: string, date: string}} = {};
 
         sessionPurchases.forEach(p => {
-          const key = `${p.name}-${p.price}`;
+          const key = `${p.name}-${p.price}-${p.paymentMethod}`;
           if (!purchaseGroups[key]) {
             purchaseGroups[key] = {name: p.name, quantity: 0, price: p.price, paymentMethod: p.paymentMethod, category: p.category, date: p.purchaseDate};
           }
