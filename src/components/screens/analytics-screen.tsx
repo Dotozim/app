@@ -10,9 +10,8 @@ import { Badge } from "../ui/badge";
 export function AnalyticsScreen() {
   const { clients, isSensitiveDataVisible } = useAppContext();
 
-  const { totalRevenue, topCategories, clientAnalytics } = useMemo(() => {
+  const { totalRevenue, clientAnalytics } = useMemo(() => {
     let totalRevenue = 0;
-    const categoryCounts: { [key: string]: { count: number; revenue: number } } = {};
     
     const clientAnalytics = clients.map(client => {
       const clientHistory = [...client.purchaseHistory];
@@ -24,12 +23,6 @@ export function AnalyticsScreen() {
         const itemTotal = item.price * item.quantity;
         totalRevenue += itemTotal;
         clientTotal += itemTotal;
-        
-        if (item.category) {
-            categoryCounts[item.category] = categoryCounts[item.category] || { count: 0, revenue: 0 };
-            categoryCounts[item.category].count += item.quantity;
-            categoryCounts[item.category].revenue += itemTotal;
-        }
         
         clientProductCounts[item.name] = clientProductCounts[item.name] || { count: 0, revenue: 0, purchases: [] };
         clientProductCounts[item.name].count += item.quantity;
@@ -61,13 +54,8 @@ export function AnalyticsScreen() {
           mostConsumedCategory: mostConsumedCategory
       }
     }).sort((a,b) => b.totalSpent - a.totalSpent);
-
-
-    const topCategories = Object.entries(categoryCounts)
-      .sort(([, a], [, b]) => b.revenue - a.revenue)
-      .map(([name, data]) => ({ name, ...data }));
       
-    return { totalRevenue, topCategories, clientAnalytics };
+    return { totalRevenue, clientAnalytics };
   }, [clients]);
 
 
@@ -82,26 +70,6 @@ export function AnalyticsScreen() {
           <p className="text-muted-foreground text-sm">
             Total from all clients.
           </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Categories by Revenue</CardTitle>
-          <CardDescription>See which product categories are most popular.</CardDescription>
-        </CardHeader>
-        <CardContent>
-           <div className="space-y-2">
-            {topCategories.length > 0 ? topCategories.map((category) => (
-              <div key={category.name} className="flex justify-between items-center bg-secondary p-3 rounded-md">
-                <div>
-                  <p className="font-semibold">{category.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatValue(category.count, isSensitiveDataVisible, (val) => `${val} sold`)}</p>
-                </div>
-                <p className="font-bold text-primary">{formatValue(category.revenue, isSensitiveDataVisible, formatCurrency)}</p>
-              </div>
-            )) : <p className="text-muted-foreground text-center py-4">No data available.</p>}
-           </div>
         </CardContent>
       </Card>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "@/context/app-context";
 import { formatCurrency, formatValue } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import { EmptyState } from "../app/empty-state";
-import { format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 
 export function ClientsScreen() {
   const { clients, navigateTo, setAddClientFormOpen, isSensitiveDataVisible } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
+  // State to force re-renders for the duration updates
+  const [, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -72,7 +81,7 @@ export function ClientsScreen() {
                       </div>
                       {client.tabOpenedAt && tabTotal > 0 && (
                           <p className="text-xs text-muted-foreground mt-2">
-                              Opened: {format(new Date(client.tabOpenedAt), "h:mm a")}
+                              Seated for: {formatDistanceToNow(new Date(client.tabOpenedAt), { addSuffix: false })}
                           </p>
                       )}
                     </div>
