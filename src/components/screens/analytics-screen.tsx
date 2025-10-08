@@ -10,24 +10,26 @@ import { Badge } from "../ui/badge";
 export function AnalyticsScreen() {
   const { clients, isSensitiveDataVisible } = useAppContext();
 
-  const { totalRevenue, topProducts, clientAnalytics } = useMemo(() => {
+  const { totalRevenue, topCategories, clientAnalytics } = useMemo(() => {
     let totalRevenue = 0;
-    const productCounts: { [key: string]: { count: number; revenue: number } } = {};
+    const categoryCounts: { [key: string]: { count: number; revenue: number } } = {};
     
     const clientAnalytics = clients.map(client => {
       const clientHistory = [...client.purchaseHistory];
       let clientTotal = 0;
       const clientProductCounts: { [key: string]: { count: number; revenue: number; purchases: {date: string, quantity: number, paymentMethod: string}[] } } = {};
-      const categoryCounts: { [key: string]: number } = {};
+      const clientCategoryCounts: { [key: string]: number } = {};
 
       clientHistory.forEach(item => {
         const itemTotal = item.price * item.quantity;
         totalRevenue += itemTotal;
         clientTotal += itemTotal;
         
-        productCounts[item.name] = productCounts[item.name] || { count: 0, revenue: 0 };
-        productCounts[item.name].count += item.quantity;
-        productCounts[item.name].revenue += itemTotal;
+        if (item.category) {
+            categoryCounts[item.category] = categoryCounts[item.category] || { count: 0, revenue: 0 };
+            categoryCounts[item.category].count += item.quantity;
+            categoryCounts[item.category].revenue += itemTotal;
+        }
         
         clientProductCounts[item.name] = clientProductCounts[item.name] || { count: 0, revenue: 0, purchases: [] };
         clientProductCounts[item.name].count += item.quantity;
@@ -39,7 +41,7 @@ export function AnalyticsScreen() {
         });
 
         if (item.category) {
-            categoryCounts[item.category] = (categoryCounts[item.category] || 0) + item.quantity;
+            clientCategoryCounts[item.category] = (clientCategoryCounts[item.category] || 0) + item.quantity;
         }
       });
 
@@ -47,8 +49,8 @@ export function AnalyticsScreen() {
         .sort(([, a], [, b]) => b.revenue - a.revenue)
         .map(([name, data]) => ({ name, ...data }));
         
-      const mostConsumedCategory = Object.keys(categoryCounts).length > 0 
-        ? Object.entries(categoryCounts).sort(([,a],[,b]) => b - a)[0][0]
+      const mostConsumedCategory = Object.keys(clientCategoryCounts).length > 0 
+        ? Object.entries(clientCategoryCounts).sort(([,a],[,b]) => b - a)[0][0]
         : null;
 
       return {
@@ -61,12 +63,11 @@ export function AnalyticsScreen() {
     }).sort((a,b) => b.totalSpent - a.totalSpent);
 
 
-    const topProducts = Object.entries(productCounts)
+    const topCategories = Object.entries(categoryCounts)
       .sort(([, a], [, b]) => b.revenue - a.revenue)
-      .slice(0, 5)
       .map(([name, data]) => ({ name, ...data }));
       
-    return { totalRevenue, topProducts, clientAnalytics };
+    return { totalRevenue, topCategories, clientAnalytics };
   }, [clients]);
 
 
@@ -86,17 +87,18 @@ export function AnalyticsScreen() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Top 5 Products (Overall)</CardTitle>
+          <CardTitle>Top Categories by Revenue</CardTitle>
+          <CardDescription>See which product categories are most popular.</CardDescription>
         </CardHeader>
         <CardContent>
            <div className="space-y-2">
-            {topProducts.length > 0 ? topProducts.map((product) => (
-              <div key={product.name} className="flex justify-between items-center bg-secondary p-3 rounded-md">
+            {topCategories.length > 0 ? topCategories.map((category) => (
+              <div key={category.name} className="flex justify-between items-center bg-secondary p-3 rounded-md">
                 <div>
-                  <p className="font-semibold">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatValue(product.count, isSensitiveDataVisible, (val) => `${val} sold`)}</p>
+                  <p className="font-semibold">{category.name}</p>
+                  <p className="text-sm text-muted-foreground">{formatValue(category.count, isSensitiveDataVisible, (val) => `${val} sold`)}</p>
                 </div>
-                <p className="font-bold text-primary">{formatValue(product.revenue, isSensitiveDataVisible, formatCurrency)}</p>
+                <p className="font-bold text-primary">{formatValue(category.revenue, isSensitiveDataVisible, formatCurrency)}</p>
               </div>
             )) : <p className="text-muted-foreground text-center py-4">No data available.</p>}
            </div>
