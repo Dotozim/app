@@ -44,7 +44,6 @@ export function AddItemForm() {
     const product = products.find(p => p.id === values.productId);
     if(product) {
         handleAddItem(activeClient.id, product);
-        form.reset();
     }
   }
 
